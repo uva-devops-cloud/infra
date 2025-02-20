@@ -4,7 +4,7 @@ provider "aws" {
 
 # Create an S3 Bucket (for Terraform state storage)
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "my-terraform-state-bucket"
+  bucket = "my-terraform-state-bucket-${data.aws_caller_identity.current.account_id}"
   acl    = "private"
 }
 
