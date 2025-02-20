@@ -8,6 +8,8 @@ resource "aws_s3_bucket" "terraform_state" {
   acl    = "private"
 }
 
+data "aws_caller_identity" "current" {}
+
 # DynamoDB for Terraform state locking
 resource "aws_dynamodb_table" "terraform_locks" {
   name         = "terraform-locks"
