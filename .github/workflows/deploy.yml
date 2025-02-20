@@ -41,6 +41,6 @@ jobs:
         working-directory: .
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        if: startsWith(github.ref, 'refs/heads/feature')
         run: terraform apply -auto-approve tfplan
         working-directory: .
