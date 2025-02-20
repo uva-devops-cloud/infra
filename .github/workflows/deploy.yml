@@ -23,7 +23,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::686255942173:role/GitHubTerraformDeployRole
           role-session-name: GitHubTerraformSession
-          aws-region: us-east-1
+          aws-region: eu-north-1
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
