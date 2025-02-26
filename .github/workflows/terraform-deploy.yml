@@ -37,7 +37,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config=backend-${{inputs.environment}}.config
         working-directory: .
 
       - name: Terraform Validate
