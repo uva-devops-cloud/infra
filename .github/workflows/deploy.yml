@@ -23,24 +23,28 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::686255942173:role/GitHubTerraformDeployRole
           role-session-name: GitHubTerraformSession
-          aws-region: us-east-1
+          aws-region: eu-west-2
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
         run: terraform init
-        working-directory: infra
+        working-directory: .
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: infra
+        working-directory: .
+
+      - name: Terraform Refresh
+        run: terraform refresh
+        working-directory: .
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
-        working-directory: infra
+        working-directory: .
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        if: true
         run: terraform apply -auto-approve tfplan
-        working-directory: infra
+        working-directory: .
