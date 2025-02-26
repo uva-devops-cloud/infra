@@ -23,9 +23,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure AWS Credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::${{inputs.aws_account_id}}:role/GitHubTerraformDeployRole
+          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/GitHubTerraformDeployRole
           role-session-name: GitHubTerraformSession
           aws-region: ${{ env.AWS_REGION }}
 
