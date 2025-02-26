@@ -10,6 +10,10 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     name: Deploy to ${{ inputs.environment }}
@@ -25,7 +29,7 @@ jobs:
       - name: Configure AWS Credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::474668415523:role/GitHubTerraformDeployRole
+          role-to-assume: arn:aws:iam::${{inputs.aws_account_id}}:role/GitHubTerraformDeployRole
           role-session-name: GitHubTerraformSession
           aws-region: ${{ env.AWS_REGION }}
 
