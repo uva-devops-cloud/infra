@@ -7,6 +7,10 @@ on:
       - develop
       - "feature/*"
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy-dev:
     name: Deploy to Dev
