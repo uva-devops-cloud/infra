@@ -1,5 +1,5 @@
 variable "aws_region" {
-  default = "eu-north-1"
+  default = "eu-west-2"
 }
 variable "google_client_id" {
   default = "869761900348-727b907c90lujsv684jocjprtkjj8vr2.apps.googleusercontent.com "
