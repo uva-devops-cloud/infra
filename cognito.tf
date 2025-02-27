@@ -26,7 +26,7 @@ resource "aws_cognito_user_pool" "students" {
 #  COGNITO USER POOL DOMAIN (HOSTED UI OPTION) #
 ################################################
 resource "aws_cognito_user_pool_domain" "student_login_domain" {
-  domain       = "student_login_domain_uva_group_jmtj"  # must be globally unique
+  domain       = "student-login-domain-uva-group-jmtj"  // valid: using hyphens
   user_pool_id = aws_cognito_user_pool.students.id
 }
 
@@ -86,6 +86,8 @@ resource "aws_cognito_user_pool_client" "students_client" {
   # If you want to enable the OAuth flows in the Hosted UI
   allowed_oauth_flows_user_pool_client = true
   generate_secret                       = false  # If front-end only (no server secret needed)
+
+  depends_on = [aws_cognito_identity_provider.google]
 }
 
 ###################################################
