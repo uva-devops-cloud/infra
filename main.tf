@@ -2,13 +2,14 @@ provider "aws" {
   region = "eu-west-2"
 }
 
-resource "aws_resourceexplorer2_index" "example" {
+resource "aws_resourceexplorer2_index" "explorer_index" {
   type = "LOCAL"
 }
 
-resource "aws_resourceexplorer2_view" "example_view" {
-  index_arn = aws_resourceexplorer2_index.example.arn
+resource "aws_resourceexplorer2_view" "explorer_view" {
   name      = "students-infra-view"
+
+  depends_on = [aws_resourceexplorer2_index.explorer_index]
 }
 
 # API Gateway (for Lambda endpoints)
