@@ -1,50 +1,29 @@
-name: "Terraform CI/CD"
+name: Main Terraform Workflow
 
 on:
   push:
     branches:
       - main
-  pull_request:
+      - develop
+      - "feature/*"
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  terraform:
-    runs-on: ubuntu-latest
+  deploy-dev:
+    name: Deploy to Dev
+    uses: ./.github/workflows/terraform-deploy.yml
+    with:
+      environment: dev
+      aws_account_id: "474668415523"
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::686255942173:role/GitHubTerraformDeployRole
-          role-session-name: GitHubTerraformSession
-          aws-region: eu-west-2
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: .
-
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: .
-
-      - name: Terraform Refresh
-        run: terraform refresh
-        working-directory: .
-
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
-        working-directory: .
-
-      - name: Terraform Apply
-        if: true
-        run: terraform apply -auto-approve tfplan
-        working-directory: .
+  deploy-prod:
+    name: Deploy to Prod
+    needs: deploy-dev
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    uses: ./.github/workflows/terraform-deploy.yml
+    with:
+      environment: prod
+      aws_account_id: "054037129431"

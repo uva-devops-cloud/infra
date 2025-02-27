@@ -1,0 +1,53 @@
+name: Terraform Deployment (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      aws_account_id:
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    env:
+      TF_VERSION: "1.11.0-rc3"
+      AWS_REGION: "eu-west-2"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::${{inputs.aws_account_id}}:role/GitHubTerraformDeployRole
+          role-session-name: GitHubTerraformSession
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init -backend-config=backend-${{inputs.environment}}.config
+        working-directory: .
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: .
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        working-directory: .
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: .
