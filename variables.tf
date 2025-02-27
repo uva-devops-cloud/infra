@@ -13,7 +13,7 @@ variable "vpc_cidr" {
 }
 
 variable "availability_zone" {
-  default = "euw2-az1"
+  default = "eu-west-2a"
 }
 
 variable "public_subnet_cidr" {
