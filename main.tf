@@ -7,8 +7,7 @@ resource "aws_resourceexplorer2_index" "explorer_index" {
 }
 
 resource "aws_resourceexplorer2_view" "explorer_view" {
-  name      = "students-infra-view"
-
+  name       = "students-infra-view"
   depends_on = [aws_resourceexplorer2_index.explorer_index]
 }
 
@@ -17,3 +16,5 @@ resource "aws_apigatewayv2_api" "api" {
   name          = "students-api"
   protocol_type = "HTTP"
 }
+
+
