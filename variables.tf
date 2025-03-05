@@ -16,6 +16,10 @@ variable "availability_zone" {
   default = "eu-west-2a"
 }
 
+variable "availability_zone_b" {
+  default = "eu-west-2b"
+}
+
 variable "public_subnet_cidr" {
   default = "10.0.1.0/24"
 }
