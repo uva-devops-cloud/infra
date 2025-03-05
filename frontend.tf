@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "frontend_bucket" {
-  bucket = "studentportal-frontend-bucket"
+  bucket = "studentportal-frontend-bucket-${data.aws_caller_identity.current.account_id}"
   acl    = "private"
 }
 
