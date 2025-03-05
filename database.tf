@@ -86,12 +86,13 @@ module "rds" {
   name               = "studentportal"
   username           = "admin"
   password           = random_password.db_password.result
-  multi_az           = true
+  multi_az           = false
+  availability_zone = var.availability_zone
   publicly_accessible = false
 
   db_subnet_group_name    = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids   = [aws_security_group.rds_sg.id]
-  subnets = [aws_subnet.private.id, aws_subnet.private_b.id]
+#   subnets = [aws_subnet.private.id, aws_subnet.private_b.id]
 
   # Snapshots/backups
   skip_final_snapshot     = false
