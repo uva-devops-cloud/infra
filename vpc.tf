@@ -44,25 +44,25 @@ resource "aws_internet_gateway" "igw" {
 }
 
 # Elastic IP for NAT Gateway
-resource "aws_eip" "nat" {
-  domain = "vpc"
+# resource "aws_eip" "nat" {
+#   domain = "vpc"
 
-  tags = {
-    Name = "nat-eip"
-  }
-}
+#   tags = {
+#     Name = "nat-eip"
+#   }
+# }
 
 # Allows only outbound internet traffic for resources in a private subnet
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id
+# resource "aws_nat_gateway" "nat" {
+#   allocation_id = aws_eip.nat.id
+#   subnet_id     = aws_subnet.public.id
 
-  tags = {
-    Name = "nat-gateway"
-  }
+#   tags = {
+#     Name = "nat-gateway"
+#   }
 
-  depends_on = [aws_subnet.public, aws_eip.nat]
-}
+#   depends_on = [aws_subnet.public, aws_eip.nat]
+# }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -87,25 +87,25 @@ resource "aws_route_table_association" "public" {
   depends_on = [aws_subnet.public, aws_route_table.public]
 }
 
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
+# resource "aws_route_table" "private" {
+#   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
-  }
+#   route {
+#     cidr_block     = "0.0.0.0/0"
+#     nat_gateway_id = aws_nat_gateway.nat.id
+#   }
 
-  tags = {
-    Name = "private-route-table"
-  }
+#   tags = {
+#     Name = "private-route-table"
+#   }
 
-  depends_on = [aws_nat_gateway.nat]
-}
+#   depends_on = [aws_nat_gateway.nat]
+# }
 
-# Links private route table to private subnet
-resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.private.id
-  route_table_id = aws_route_table.private.id
+# # Links private route table to private subnet
+# resource "aws_route_table_association" "private" {
+#   subnet_id      = aws_subnet.private.id
+#   route_table_id = aws_route_table.private.id
 
-  depends_on = [aws_subnet.private, aws_route_table.private]
-}
+#   depends_on = [aws_subnet.private, aws_route_table.private]
+# }
