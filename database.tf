@@ -76,14 +76,14 @@ resource "aws_secretsmanager_secret_version" "db_secret_version" {
 
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
-  version = "~> 3.0"
+  version = "~> 5.0"
 
   identifier         = "student-portal-db"
   engine             = "postgres"
   engine_version     = "14"
   instance_class     = "db.t3.medium"
   allocated_storage  = 20
-  name               = "studentportal"
+  db_name               = "studentportal"
   username           = "admin"
   password           = random_password.db_password.result
   multi_az           = false
