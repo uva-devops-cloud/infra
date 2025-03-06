@@ -61,8 +61,8 @@ resource "random_password" "db_password" {
 }
 
 resource "aws_secretsmanager_secret" "db_secret" {
-  name        = "rds-db-password-${formatdate("YYYYMMDD", timestamp())}"  # Add timestamp to make unique
-  description = "RDS PostgreSQL master password"
+  name        = "studentportal-db-password-${data.aws_caller_identity.current.account_id}"
+  description = "RDS PostgreSQL master password for StudentPortal"
 }
 
 resource "aws_secretsmanager_secret_version" "db_secret_version" {
