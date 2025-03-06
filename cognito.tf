@@ -14,7 +14,7 @@ resource "aws_cognito_user_pool" "students" {
     require_lowercase = true
   }
 
-  schema {
+  schema { // Update to FirstName, LastName depending on DB
     attribute_data_type = "String"
     name                = "name"
     required            = true
