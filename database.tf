@@ -90,6 +90,8 @@ module "rds" {
   availability_zone = var.availability_zone
   publicly_accessible = false
 
+  family             = "postgres14"
+
   db_subnet_group_name    = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids   = [aws_security_group.rds_sg.id]
 #   subnets = [aws_subnet.private.id, aws_subnet.private_b.id]
