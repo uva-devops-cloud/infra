@@ -1,10 +1,21 @@
 resource "aws_s3_bucket" "frontend_bucket" {
   bucket = "studentportal-frontend-bucket-${data.aws_caller_identity.current.account_id}"
-  acl    = "private"
+}
 
-  website {
-    index_document = "index.html"
-    error_document = "index.html"
+resource "aws_s3_bucket_acl" "frontend_bucket_acl" {
+  bucket = aws_s3_bucket.frontend_bucket.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_website_configuration" "frontend_bucket_website" {
+  bucket = aws_s3_bucket.frontend_bucket.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "index.html"
   }
 }
 
@@ -34,6 +45,9 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   is_ipv6_enabled     = true
   comment             = "StudentPortal Frontend CloudFront Distribution"
   default_root_object = "index.html"
+
+  # Use the cheapest price class (US, Canada, Europe)
+  price_class = "PriceClass_100"
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
