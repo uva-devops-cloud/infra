@@ -20,6 +20,9 @@ resource "aws_cognito_user_pool" "students" {
     required            = true
     mutable             = true
   }
+
+  tags = local.common_tags
+
 }
 
 ################################################

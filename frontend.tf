@@ -1,5 +1,8 @@
 resource "aws_s3_bucket" "frontend_bucket" {
   bucket = "studentportal-frontend-bucket-${data.aws_caller_identity.current.account_id}"
+
+  tags = local.common_tags
+
 }
 
 resource "aws_s3_bucket_acl" "frontend_bucket_acl" {
@@ -96,6 +99,9 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  tags = local.common_tags
+
 }
 
 resource "aws_cloudfront_origin_access_identity" "frontend_identity" {
