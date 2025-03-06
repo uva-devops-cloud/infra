@@ -69,6 +69,7 @@ jobs:
         run: |
           # Extract DB endpoint from terraform output
           DB_HOST=$(terraform output -raw db_endpoint)
+          DB_SECRET_NAME=$(terraform output -raw db_secret_name)  # New output needed
           DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id rds-db-password --query SecretString --output text)
           
           # Run Flyway migrations

@@ -61,7 +61,7 @@ resource "random_password" "db_password" {
 }
 
 resource "aws_secretsmanager_secret" "db_secret" {
-  name        = "rds-db-password"
+  name        = "rds-db-password-${formatdate("YYYYMMDD", timestamp())}"  # Add timestamp to make unique
   description = "RDS PostgreSQL master password"
 }
 
