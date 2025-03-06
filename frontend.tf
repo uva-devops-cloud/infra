@@ -54,9 +54,9 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   ordered_cache_behavior {
-    path_pattern = "/api/*"
-    allowed_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
-    cached_methods  = ["GET", "HEAD"]
+    path_pattern     = "/api/*"
+    allowed_methods  = ["HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"] # Added HEAD
+    cached_methods   = ["GET", "HEAD"]
     target_origin_id = "API-Gateway-Origin"
 
     forwarded_values {
