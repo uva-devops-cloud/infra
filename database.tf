@@ -84,7 +84,7 @@ module "rds" {
   instance_class     = "db.t3.medium"
   allocated_storage  = 20
   db_name               = "studentportal"
-  username           = "admin"
+  username           = "dbadmin"
   password           = random_password.db_password.result
   multi_az           = false
   availability_zone = var.availability_zone
