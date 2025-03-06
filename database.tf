@@ -120,10 +120,10 @@ output "db_endpoint" {
 # ----------------------------------------------------------------------------
 # Flyaway migration tool
 # ----------------------------------------------------------------------------
-resource "null_resource" "db_migrations" {
-  depends_on = [module.rds]
+# resource "null_resource" "db_migrations" {
+#   depends_on = [module.rds]
 
-  provisioner "local-exec" {
-    command = "flyway -url=jdbc:postgresql://${module.rds.db_instance_endpoint}/studentportal -user=dbadmin -password=${random_password.db_password.result} -locations=filesystem:./migrations migrate"
-  }
-}
+#   provisioner "local-exec" {
+#     command = "flyway -url=jdbc:postgresql://${module.rds.db_instance_endpoint}/studentportal -user=dbadmin -password=${random_password.db_password.result} -locations=filesystem:./migrations migrate"
+#   }
+# }

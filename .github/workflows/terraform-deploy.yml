@@ -72,7 +72,12 @@ jobs:
           DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id rds-db-password --query SecretString --output text)
           
           # Run Flyway migrations
-          flyway -url=jdbc:postgresql://${DB_HOST}/studentportal -user=dbadmin -password=${DB_PASSWORD} -locations=filesystem:./migrations migrate
+          flyway \
+            -url=jdbc:postgresql://${DB_HOST}/studentportal \
+            -user=dbadmin \
+            -password=${DB_PASSWORD} \
+            -locations=filesystem:./migrations \
+            migrate
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
         working-directory: .
