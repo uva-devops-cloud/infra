@@ -113,7 +113,7 @@ resource "aws_api_gateway_integration" "student_any_integration" {
   resource_id = aws_api_gateway_resource.student.id
   http_method = aws_api_gateway_method.student_any.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = jsonencode({
       statusCode = 200
@@ -127,24 +127,24 @@ resource "aws_api_gateway_integration_response" "student_any_integration_respons
   resource_id = aws_api_gateway_resource.student.id
   http_method = aws_api_gateway_method.student_any.http_method
   status_code = "200"
-  
+
   # Updated mock response to match React application's data structure
   response_templates = {
     "application/json" = jsonencode({
-      name = "John Doe",
-      email = "john.doe@student.uva.nl",
-      start_year = 2022,
+      name            = "John Doe",
+      email           = "john.doe@student.uva.nl",
+      start_year      = 2022,
       graduation_year = 2026,
-      address = "123 Amsterdam Street"
+      address         = "123 Amsterdam Street"
     })
   }
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS,PATCH'"
   }
-  
+
   depends_on = [
     aws_api_gateway_method.student_any,
     aws_api_gateway_integration.student_any_integration
@@ -157,13 +157,13 @@ resource "aws_api_gateway_method_response" "student_any_response" {
   resource_id = aws_api_gateway_resource.student.id
   http_method = aws_api_gateway_method.student_any.http_method
   status_code = "200"
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
-  
+
   depends_on = [aws_api_gateway_method.student_any]
 }
 
@@ -173,7 +173,7 @@ resource "aws_api_gateway_integration" "student_options_integration" {
   resource_id = aws_api_gateway_resource.student.id
   http_method = aws_api_gateway_method.student_options.http_method
   type        = "MOCK"
-  
+
   request_templates = {
     "application/json" = jsonencode({
       statusCode = 200
@@ -187,13 +187,13 @@ resource "aws_api_gateway_integration_response" "student_options_integration_res
   resource_id = aws_api_gateway_resource.student.id
   http_method = aws_api_gateway_method.student_options.http_method
   status_code = "200"
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS,PATCH'"
   }
-  
+
   depends_on = [
     aws_api_gateway_method.student_options,
     aws_api_gateway_integration.student_options_integration
@@ -202,11 +202,11 @@ resource "aws_api_gateway_integration_response" "student_options_integration_res
 
 # Method response for OPTIONS
 resource "aws_api_gateway_method_response" "student_options_200" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.student.id
-  http_method   = aws_api_gateway_method.student_options.http_method
-  status_code   = "200"
-  
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.student.id
+  http_method = aws_api_gateway_method.student_options.http_method
+  status_code = "200"
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
@@ -217,15 +217,57 @@ resource "aws_api_gateway_method_response" "student_options_200" {
 # Deploy the API to a stage
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-  
+
   # This ensures the deployment happens after all resources are created
   depends_on = [
     aws_api_gateway_integration.student_any_integration,
     aws_api_gateway_integration.student_options_integration,
-    aws_api_gateway_method.programs_any,
-    aws_api_gateway_method.courses_any,
-    aws_api_gateway_method.usage_information_any
+    aws_api_gateway_integration.programs_any_integration,
+    aws_api_gateway_integration.courses_any_integration,
+    aws_api_gateway_integration.usage_information_any_integration
   ]
+}
+
+# Mock integration for programs resource
+resource "aws_api_gateway_integration" "programs_any_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.programs.id
+  http_method = aws_api_gateway_method.programs_any.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+# Mock integration for courses resource
+resource "aws_api_gateway_integration" "courses_any_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.courses.id
+  http_method = aws_api_gateway_method.courses_any.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+# Mock integration for usage_information resource
+resource "aws_api_gateway_integration" "usage_information_any_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.usage_information.id
+  http_method = aws_api_gateway_method.usage_information_any.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
 }
 
 resource "aws_api_gateway_stage" "api_stage" {

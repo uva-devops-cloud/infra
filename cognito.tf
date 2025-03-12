@@ -2,9 +2,9 @@
 #  COGNITO USER POOL (STUDENTS)  #
 ##################################
 resource "aws_cognito_user_pool" "students" {
-  name                       = "students-user-pool"
-  auto_verified_attributes   = ["email"]
-  username_attributes        = ["email"]
+  name                     = "students-user-pool"
+  auto_verified_attributes = ["email"]
+  username_attributes      = ["email"]
 
   password_policy {
     minimum_length    = 8
@@ -26,11 +26,11 @@ resource "aws_cognito_user_pool" "students" {
 #  COGNITO USER POOL DOMAIN (HOSTED UI OPTION) #
 ################################################
 resource "aws_cognito_user_pool_domain" "student_login_domain" {
-  domain       = "student-login-domain-uva-group-jmtj"  // valid: using hyphens
+  domain       = "student-login-domain-uva-group-${data.aws_caller_identity.current.account_id}" // valid: using hyphens
   user_pool_id = aws_cognito_user_pool.students.id
 }
 
-#################################
+################################# 
 #  GOOGLE IDENTITY PROVIDER     #
 #################################
 resource "aws_cognito_identity_provider" "google" {
@@ -59,7 +59,7 @@ resource "aws_cognito_user_pool_client" "students_client" {
 
   # The flows you want to allow
   allowed_oauth_flows = [
-    "code",          # Use Authorization Code flow for Hosted UI
+    "code", # Use Authorization Code flow for Hosted UI
     "implicit"
   ]
   allowed_oauth_scopes = [
@@ -68,8 +68,8 @@ resource "aws_cognito_user_pool_client" "students_client" {
     "profile"
   ]
   supported_identity_providers = [
-    "COGNITO",   # Default Cognito-based (user/password) login
-    "Google"     # The Identity Provider we created above
+    "COGNITO", # Default Cognito-based (user/password) login
+    "Google"   # The Identity Provider we created above
   ]
 
   # Allowed callback URLs after user logs in
@@ -85,7 +85,7 @@ resource "aws_cognito_user_pool_client" "students_client" {
 
   # If you want to enable the OAuth flows in the Hosted UI
   allowed_oauth_flows_user_pool_client = true
-  generate_secret                       = false  # If front-end only (no server secret needed)
+  generate_secret                      = false # If front-end only (no server secret needed)
 
   depends_on = [aws_cognito_identity_provider.google]
 }
