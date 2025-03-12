@@ -32,8 +32,30 @@ resource "aws_resourceexplorer2_view" "explorer_view" {
 # API Gateway (for Lambda endpoints)
 resource "aws_apigatewayv2_api" "api" {
   name          = "students-api"
-  protocol_type = "HTTP"
+  protocol_type = "REST"
 
   tags = local.common_tags
 }
 
+# Required for API Gateway to function
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.api.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+resource "aws_apigatewayv2_integration" "orchestrator_integration" {
+  api_id             = aws_apigatewayv2_api.api.id
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+  integration_uri    = aws_lambda_function.orchestrator.invoke_arn
+}
+
+resource "aws_apigatewayv2_route" "orchestrator_route" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /api/student/query"
+  target    = "integrations/${aws_apigatewayv2_integration.orchestrator_integration.id}"
+
+  authorizer_id      = aws_apigatewayv2_authorizer.students_authorizer.id
+  authorization_type = "JWT"
+}

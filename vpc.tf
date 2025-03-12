@@ -56,27 +56,6 @@ resource "aws_internet_gateway" "igw" {
   depends_on = [aws_vpc.main]
 }
 
-# Elastic IP for NAT Gateway
-# resource "aws_eip" "nat" {
-#   domain = "vpc"
-
-#   tags = {
-#     Name = "nat-eip"
-#   }
-# }
-
-# Allows only outbound internet traffic for resources in a private subnet
-# resource "aws_nat_gateway" "nat" {
-#   allocation_id = aws_eip.nat.id
-#   subnet_id     = aws_subnet.public.id
-
-#   tags = {
-#     Name = "nat-gateway"
-#   }
-
-#   depends_on = [aws_subnet.public, aws_eip.nat]
-# }
-
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -122,4 +101,25 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 
   depends_on = [aws_subnet.private, aws_route_table.private]
+}
+
+# Security group for Lambda functions
+resource "aws_security_group" "lambda_sg" {
+  name        = "lambda-security-group"
+  description = "Security group for Lambda functions"
+  vpc_id      = aws_vpc.main.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "lambda-sg"
+    }
+  )
 }

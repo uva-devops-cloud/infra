@@ -43,14 +43,6 @@ resource "aws_security_group" "rds_sg" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
-  ingress {
-    description = "PostgreSQL"
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -100,14 +92,14 @@ module "rds" {
   identifier          = "student-portal-db"
   engine              = "postgres"
   engine_version      = "14"
-  instance_class      = "db.t3.medium"
+  instance_class      = "db.t3.micro"
   allocated_storage   = 20
   db_name             = "studentportal"
   username            = "dbadmin"
   password            = random_password.db_password.result
   multi_az            = false
   availability_zone   = var.availability_zone
-  publicly_accessible = true
+  publicly_accessible = false
 
   family = "postgres14"
 
