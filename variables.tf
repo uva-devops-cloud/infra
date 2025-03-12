@@ -5,6 +5,7 @@ variable "aws_region" {
 variable "google_client_id" {
   type      = string
   sensitive = true
+  default   = "790428310125-ecad52ggpandpmk422ihp7gqsrruh27u.apps.googleusercontent.com"
 }
 variable "google_client_secret" {
   type      = string

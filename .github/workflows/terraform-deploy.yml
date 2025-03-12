@@ -41,14 +41,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Create tfvars file
-        run: |
-          cat > ${{inputs.environment}}.tfvars <<EOF
-          google_client_secret = "${{ secrets.google_client_secret }}"
-          environment = "${{inputs.environment}}"
-          EOF
-        working-directory: .
-
       - name: Terraform Init
         run: terraform init -backend-config=backend-${{inputs.environment}}.config
         working-directory: .
@@ -60,7 +52,11 @@ jobs:
         # tfp
 
       - name: Terraform Plan
-        run: terraform plan -var-file="${{inputs.environment}}.tfvars" -out=tfplan
+        run: |
+          terraform plan \
+            -var="google_client_secret=${{ secrets.google_client_secret }}" \
+            -var="environment=${{ inputs.environment }}" \
+            -out=tfplan
         working-directory: .
 
       - name: Terraform Apply
