@@ -29,7 +29,7 @@ resource "aws_cognito_user_pool" "students" {
 #  COGNITO USER POOL DOMAIN (HOSTED UI OPTION) #
 ################################################
 resource "aws_cognito_user_pool_domain" "student_login_domain" {
-  domain       = "student-login-domain-${data.aws_caller_identity.current.account_id}" // valid: using hyphens
+  domain       = "studentportal-${data.aws_caller_identity.current.account_id}" // valid: using hyphens
   user_pool_id = aws_cognito_user_pool.students.id
 }
 
