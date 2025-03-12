@@ -43,6 +43,14 @@ resource "aws_api_gateway_resource" "resources" {
   depends_on = [aws_api_gateway_rest_api.api]
 }
 
+# First, ensure the Cognito authorizer is defined before it's referenced
+resource "aws_api_gateway_authorizer" "students_authorizer" {
+  name          = "students_authorizer"
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  type          = "COGNITO_USER_POOLS"
+  provider_arns = [aws_cognito_user_pool.student_pool.arn] # Make sure this resource exists
+}
+
 # Create ANY methods with JWT auth for all resources
 resource "aws_api_gateway_method" "any_methods" {
   for_each = local.endpoints
@@ -193,7 +201,10 @@ resource "aws_api_gateway_deployment" "api_deployment" {
 
   # Force redeployment when any of the integrations change
   triggers = {
-    redeployment = sha1(jsonencode([
+    # Add timestamp to force redeployment as needed
+    redeployment = "${timestamp()}"
+    # Include all resources in the hash
+    resources = sha1(jsonencode([
       aws_api_gateway_resource.resources,
       aws_api_gateway_method.any_methods,
       aws_api_gateway_method.options_methods,
@@ -202,7 +213,8 @@ resource "aws_api_gateway_deployment" "api_deployment" {
       aws_api_gateway_method_response.any_method_responses,
       aws_api_gateway_method_response.options_method_responses,
       aws_api_gateway_integration_response.any_integration_responses,
-      aws_api_gateway_integration_response.options_integration_responses
+      aws_api_gateway_integration_response.options_integration_responses,
+      aws_api_gateway_authorizer.students_authorizer
     ]))
   }
 
