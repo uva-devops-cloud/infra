@@ -4,6 +4,8 @@ provider "aws" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_resourceexplorer2_index" "explorer_index" {
   type = "LOCAL"
 }

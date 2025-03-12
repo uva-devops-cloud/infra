@@ -9,3 +9,13 @@ output "api_gateway_id" {
 output "cloudfront_domain" {
   value = aws_cloudfront_distribution.frontend_distribution.domain_name
 }
+
+output "db_endpoint" {
+  description = "RDS endpoint"
+  value       = module.rds.db_instance_endpoint
+}
+
+output "db_secret_name" {
+  description = "RDS password secret name"
+  value       = aws_secretsmanager_secret.db_secret.name
+}
