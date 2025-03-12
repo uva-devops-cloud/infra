@@ -240,6 +240,15 @@ resource "aws_api_gateway_integration_response" "root_integration_response" {
   }
 }
 
+resource "time_sleep" "wait_for_api_resources" {
+  depends_on = [
+    aws_api_gateway_integration_response.any_integration_responses,
+    aws_api_gateway_integration_response.options_integration_responses,
+    aws_api_gateway_integration_response.root_integration_response
+  ]
+  create_duration = "10s"
+}
+
 # Deploy the API to a stage
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -279,7 +288,8 @@ resource "aws_api_gateway_deployment" "api_deployment" {
     aws_api_gateway_method.root_method,
     aws_api_gateway_integration.root_integration,
     aws_api_gateway_method_response.root_method_response,
-    aws_api_gateway_integration_response.root_integration_response
+    aws_api_gateway_integration_response.root_integration_response,
+    time_sleep.wait_for_api_resources
   ]
 }
 
