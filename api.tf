@@ -191,15 +191,36 @@ resource "aws_api_gateway_method_response" "options_method_responses" {
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
+  # Force redeployment when any of the integrations change
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.resources,
+      aws_api_gateway_method.any_methods,
+      aws_api_gateway_method.options_methods,
+      aws_api_gateway_integration.any_integrations,
+      aws_api_gateway_integration.options_integrations,
+      aws_api_gateway_method_response.any_method_responses,
+      aws_api_gateway_method_response.options_method_responses,
+      aws_api_gateway_integration_response.any_integration_responses,
+      aws_api_gateway_integration_response.options_integration_responses
+    ]))
+  }
+
   lifecycle {
     create_before_destroy = true
   }
 
+  # Explicit dependencies - list every resource type
   depends_on = [
+    aws_api_gateway_method.any_methods,
+    aws_api_gateway_method.options_methods,
     aws_api_gateway_integration.any_integrations,
     aws_api_gateway_integration.options_integrations,
+    aws_api_gateway_method_response.any_method_responses,
+    aws_api_gateway_method_response.options_method_responses,
     aws_api_gateway_integration_response.any_integration_responses,
-    aws_api_gateway_integration_response.options_integration_responses
+    aws_api_gateway_integration_response.options_integration_responses,
+    aws_api_gateway_authorizer.students_authorizer
   ]
 }
 
@@ -207,4 +228,12 @@ resource "aws_api_gateway_stage" "api_stage" {
   deployment_id = aws_api_gateway_deployment.api_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.api.id
   stage_name    = "v1"
+}
+
+resource "aws_api_gateway_authorizer" "students_authorizer" {
+  name            = "students-authorizer"
+  rest_api_id     = aws_api_gateway_rest_api.api.id
+  type            = "COGNITO_USER_POOLS"
+  provider_arns   = [aws_cognito_user_pool.students.arn]
+  identity_source = "method.request.header.Authorization"
 }
