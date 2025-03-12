@@ -28,19 +28,6 @@ resource "aws_lambda_function" "orchestrator" {
   tags = local.common_tags
 }
 
-resource "aws_lambda_permission" "api_gateway_orchestrator" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.orchestrator.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
-
-  depends_on = [
-    aws_lambda_function.orchestrator,
-    aws_api_gateway_rest_api.api
-  ]
-}
-
 # Worker Lambda functions (in Private Subnet)
 # resource "aws_lambda_function" "get_student_degree" {
 #   function_name = "get-student-degree"

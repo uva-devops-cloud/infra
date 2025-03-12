@@ -96,15 +96,14 @@ resource "aws_cognito_user_pool_client" "students_client" {
 ###################################################
 #  API GATEWAY JWT AUTHORIZER (USING COGNITO)     #
 ###################################################
-resource "aws_apigatewayv2_authorizer" "students_authorizer" {
-  api_id           = aws_api_gateway_rest_api.api.id
-  authorizer_type  = "JWT"
-  identity_sources = ["$request.header.Authorization"]
-  name             = "studentsCognitoAuthorizer"
-  jwt_configuration {
-    issuer = "https://cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.students.id}"
-    audience = [
-      aws_cognito_user_pool_client.students_client.id
-    ]
-  }
+resource "aws_api_gateway_authorizer" "students_authorizer" {
+  name        = "studentsCognitoAuthorizer" # Keep the same name
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  type        = "COGNITO_USER_POOLS"
+
+  # Use your existing Cognito pool (not students_pool)
+  provider_arns = [aws_cognito_user_pool.students.arn]
+
+  # This is how you specify where to find the token
+  identity_source = "method.request.header.Authorization"
 }

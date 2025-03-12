@@ -102,24 +102,3 @@ resource "aws_route_table_association" "private" {
 
   depends_on = [aws_subnet.private, aws_route_table.private]
 }
-
-# Security group for Lambda functions
-resource "aws_security_group" "lambda_sg" {
-  name        = "lambda-security-group"
-  description = "Security group for Lambda functions"
-  vpc_id      = aws_vpc.main.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "lambda-sg"
-    }
-  )
-}
