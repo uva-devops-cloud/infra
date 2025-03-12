@@ -20,98 +20,43 @@ resource "aws_api_gateway_gateway_response" "cors" {
   }
 }
 
+# Define endpoints to create
+locals {
+  endpoints = {
+    "student"           = { mock_response = { name = "John Doe", email = "john.doe@student.uva.nl", start_year = 2022, graduation_year = 2026, address = "123 Amsterdam Street" } }
+    "programs"          = { mock_response = [] }
+    "courses"           = { mock_response = [] }
+    "usage_information" = { mock_response = {} }
+  }
+}
+
 # Create API resources
-resource "aws_api_gateway_resource" "student" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "student"
-}
+resource "aws_api_gateway_resource" "resources" {
+  for_each = local.endpoints
 
-resource "aws_api_gateway_resource" "programs" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "programs"
-}
-
-resource "aws_api_gateway_resource" "courses" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "courses"
-}
-
-resource "aws_api_gateway_resource" "usage_information" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
-  path_part   = "usage_information"
+  path_part   = each.key
 }
 
 # Create ANY methods with JWT auth for all resources
-resource "aws_api_gateway_method" "student_any" {
+resource "aws_api_gateway_method" "any_methods" {
+  for_each = local.endpoints
+
   rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.student.id
+  resource_id   = aws_api_gateway_resource.resources[each.key].id
   http_method   = "ANY"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
 }
 
-resource "aws_api_gateway_method" "programs_any" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.programs.id
-  http_method   = "ANY"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
-}
+# Mock integration for resources
+resource "aws_api_gateway_integration" "any_integrations" {
+  for_each = local.endpoints
 
-resource "aws_api_gateway_method" "courses_any" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.courses.id
-  http_method   = "ANY"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
-}
-
-resource "aws_api_gateway_method" "usage_information_any" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.usage_information.id
-  http_method   = "ANY"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
-}
-
-# OPTIONS methods for all resources (for CORS)
-resource "aws_api_gateway_method" "student_options" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.student.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "programs_options" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.programs.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "courses_options" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.courses.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method" "usage_information_options" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.usage_information.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
-# Mock integration for student resource
-resource "aws_api_gateway_integration" "student_any_integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.student.id
-  http_method = aws_api_gateway_method.student_any.http_method
+  resource_id = aws_api_gateway_resource.resources[each.key].id
+  http_method = aws_api_gateway_method.any_methods[each.key].http_method
   type        = "MOCK"
 
   request_templates = {
@@ -121,22 +66,18 @@ resource "aws_api_gateway_integration" "student_any_integration" {
   }
 }
 
-# Integration response for student mock
-resource "aws_api_gateway_integration_response" "student_any_integration_response" {
+# Integration responses for mock
+resource "aws_api_gateway_integration_response" "any_integration_responses" {
+  for_each = local.endpoints
+
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.student.id
-  http_method = aws_api_gateway_method.student_any.http_method
+  resource_id = aws_api_gateway_resource.resources[each.key].id
+  http_method = aws_api_gateway_method.any_methods[each.key].http_method
   status_code = "200"
 
-  # Updated mock response to match React application's data structure
+  # Return appropriate mock response
   response_templates = {
-    "application/json" = jsonencode({
-      name            = "John Doe",
-      email           = "john.doe@student.uva.nl",
-      start_year      = 2022,
-      graduation_year = 2026,
-      address         = "123 Amsterdam Street"
-    })
+    "application/json" = jsonencode(each.value.mock_response)
   }
 
   response_parameters = {
@@ -144,18 +85,15 @@ resource "aws_api_gateway_integration_response" "student_any_integration_respons
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS,PATCH'"
   }
-
-  depends_on = [
-    aws_api_gateway_method.student_any,
-    aws_api_gateway_integration.student_any_integration
-  ]
 }
 
-# Method response for student ANY method
-resource "aws_api_gateway_method_response" "student_any_response" {
+# Method response for ANY methods
+resource "aws_api_gateway_method_response" "any_method_responses" {
+  for_each = local.endpoints
+
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.student.id
-  http_method = aws_api_gateway_method.student_any.http_method
+  resource_id = aws_api_gateway_resource.resources[each.key].id
+  http_method = aws_api_gateway_method.any_methods[each.key].http_method
   status_code = "200"
 
   response_parameters = {
@@ -163,15 +101,25 @@ resource "aws_api_gateway_method_response" "student_any_response" {
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
-
-  depends_on = [aws_api_gateway_method.student_any]
 }
 
-# OPTIONS integration for student resource
-resource "aws_api_gateway_integration" "student_options_integration" {
+# OPTIONS methods (for CORS)
+resource "aws_api_gateway_method" "options_methods" {
+  for_each = local.endpoints
+
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resources[each.key].id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+# OPTIONS integrations
+resource "aws_api_gateway_integration" "options_integrations" {
+  for_each = local.endpoints
+
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.student.id
-  http_method = aws_api_gateway_method.student_options.http_method
+  resource_id = aws_api_gateway_resource.resources[each.key].id
+  http_method = aws_api_gateway_method.options_methods[each.key].http_method
   type        = "MOCK"
 
   request_templates = {
@@ -181,11 +129,13 @@ resource "aws_api_gateway_integration" "student_options_integration" {
   }
 }
 
-# OPTIONS integration response for student
-resource "aws_api_gateway_integration_response" "student_options_integration_response" {
+# OPTIONS integration responses
+resource "aws_api_gateway_integration_response" "options_integration_responses" {
+  for_each = local.endpoints
+
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.student.id
-  http_method = aws_api_gateway_method.student_options.http_method
+  resource_id = aws_api_gateway_resource.resources[each.key].id
+  http_method = aws_api_gateway_method.options_methods[each.key].http_method
   status_code = "200"
 
   response_parameters = {
@@ -193,18 +143,15 @@ resource "aws_api_gateway_integration_response" "student_options_integration_res
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS,PATCH'"
   }
-
-  depends_on = [
-    aws_api_gateway_method.student_options,
-    aws_api_gateway_integration.student_options_integration
-  ]
 }
 
-# Method response for OPTIONS
-resource "aws_api_gateway_method_response" "student_options_200" {
+# Method responses for OPTIONS
+resource "aws_api_gateway_method_response" "options_method_responses" {
+  for_each = local.endpoints
+
   rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.student.id
-  http_method = aws_api_gateway_method.student_options.http_method
+  resource_id = aws_api_gateway_resource.resources[each.key].id
+  http_method = aws_api_gateway_method.options_methods[each.key].http_method
   status_code = "200"
 
   response_parameters = {
@@ -214,59 +161,18 @@ resource "aws_api_gateway_method_response" "student_options_200" {
   }
 }
 
-# Deploy the API to a stage
+# Deploy the API to a stage (removed duplicate)
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
-  # This ensures the deployment happens after all resources are created
+  # Terraform automatically determines dependencies, but we're making it explicit
   depends_on = [
-    aws_api_gateway_integration.student_any_integration,
-    aws_api_gateway_integration.student_options_integration,
-    aws_api_gateway_integration.programs_any_integration,
-    aws_api_gateway_integration.courses_any_integration,
-    aws_api_gateway_integration.usage_information_any_integration
+    aws_api_gateway_integration_response.any_integration_responses,
+    aws_api_gateway_integration_response.options_integration_responses
   ]
-}
 
-# Mock integration for programs resource
-resource "aws_api_gateway_integration" "programs_any_integration" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.programs.id
-  http_method = aws_api_gateway_method.programs_any.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = jsonencode({
-      statusCode = 200
-    })
-  }
-}
-
-# Mock integration for courses resource
-resource "aws_api_gateway_integration" "courses_any_integration" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.courses.id
-  http_method = aws_api_gateway_method.courses_any.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = jsonencode({
-      statusCode = 200
-    })
-  }
-}
-
-# Mock integration for usage_information resource
-resource "aws_api_gateway_integration" "usage_information_any_integration" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.usage_information.id
-  http_method = aws_api_gateway_method.usage_information_any.http_method
-  type        = "MOCK"
-
-  request_templates = {
-    "application/json" = jsonencode({
-      statusCode = 200
-    })
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
