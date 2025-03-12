@@ -191,22 +191,19 @@ resource "aws_api_gateway_method_response" "options_method_responses" {
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
+  # Add this stage description to force redeployment
+  stage_description = "Deployed at ${timestamp()}"
+
   # Force redeployment when any of the integrations change
   triggers = {
-    # Add timestamp to force redeployment as needed
-    redeployment = "${timestamp()}"
     # Include all resources in the hash
-    resources = sha1(jsonencode([
-      aws_api_gateway_resource.resources,
-      aws_api_gateway_method.any_methods,
-      aws_api_gateway_method.options_methods,
-      aws_api_gateway_integration.any_integrations,
-      aws_api_gateway_integration.options_integrations,
-      aws_api_gateway_method_response.any_method_responses,
-      aws_api_gateway_method_response.options_method_responses,
-      aws_api_gateway_integration_response.any_integration_responses,
-      aws_api_gateway_integration_response.options_integration_responses,
-      aws_api_gateway_authorizer.students_authorizer
+    resources = sha1(join(",", [
+      # Join all resource ids to create a dependency chain
+      jsonencode(values(aws_api_gateway_resource.resources)[*].id),
+      jsonencode(values(aws_api_gateway_method.any_methods)[*].id),
+      jsonencode(values(aws_api_gateway_method.options_methods)[*].id),
+      jsonencode(values(aws_api_gateway_integration.any_integrations)[*].id),
+      jsonencode(values(aws_api_gateway_integration.options_integrations)[*].id)
     ]))
   }
 
