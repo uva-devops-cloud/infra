@@ -30,9 +30,9 @@ resource "aws_resourceexplorer2_view" "explorer_view" {
 }
 
 # API Gateway (for Lambda endpoints)
-resource "aws_apigatewayv2_api" "api" {
-  name          = "students-api"
-  protocol_type = "REST"
+resource "aws_api_gateway_rest_api" "api" {
+  name        = "students-api"
+  description = "REST API for students"
 
   tags = local.common_tags
 }
