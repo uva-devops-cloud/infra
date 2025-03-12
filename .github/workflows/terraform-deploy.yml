@@ -9,6 +9,9 @@ on:
       aws_account_id:
         required: true
         type: string
+    secrets:
+      google_client_secret:
+        required: true
 
 permissions:
   id-token: write
@@ -37,6 +40,14 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+
+      - name: Create tfvars file
+        run: |
+          cat > ${{inputs.environment}}.tfvars <<EOF
+          google_client_secret = "${{ secrets.google_client_secret }}"
+          environment = "${{inputs.environment}}"
+          EOF
+        working-directory: .
 
       - name: Terraform Init
         run: terraform init -backend-config=backend-${{inputs.environment}}.config
