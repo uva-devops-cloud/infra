@@ -18,15 +18,17 @@ resource "aws_api_gateway_gateway_response" "cors" {
     "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
   }
+
+  depends_on = [aws_api_gateway_rest_api.api]
 }
 
-# Define endpoints to create
+# Define endpoints to create with original names
 locals {
   endpoints = {
-    "student_new"           = { mock_response = { name = "John Doe", email = "john.doe@student.uva.nl", start_year = 2022, graduation_year = 2026, address = "123 Amsterdam Street" } }
-    "programs_new"          = { mock_response = [] }
-    "courses_new"           = { mock_response = [] }
-    "usage_information_new" = { mock_response = {} }
+    "student"           = { mock_response = { name = "John Doe", email = "john.doe@student.uva.nl", start_year = 2022, graduation_year = 2026, address = "123 Amsterdam Street" } }
+    "programs"          = { mock_response = [] }
+    "courses"           = { mock_response = [] }
+    "usage_information" = { mock_response = {} }
   }
 }
 
@@ -37,6 +39,8 @@ resource "aws_api_gateway_resource" "resources" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
   path_part   = each.key
+
+  depends_on = [aws_api_gateway_rest_api.api]
 }
 
 # Create ANY methods with JWT auth for all resources
@@ -48,6 +52,8 @@ resource "aws_api_gateway_method" "any_methods" {
   http_method   = "ANY"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
+
+  depends_on = [aws_api_gateway_resource.resources]
 }
 
 # Mock integration for resources
@@ -64,6 +70,8 @@ resource "aws_api_gateway_integration" "any_integrations" {
       statusCode = 200
     })
   }
+
+  depends_on = [aws_api_gateway_method.any_methods]
 }
 
 # Integration responses for mock
@@ -85,6 +93,11 @@ resource "aws_api_gateway_integration_response" "any_integration_responses" {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS,PATCH'"
   }
+
+  depends_on = [
+    aws_api_gateway_method_response.any_method_responses,
+    aws_api_gateway_integration.any_integrations
+  ]
 }
 
 # Method response for ANY methods
@@ -101,6 +114,8 @@ resource "aws_api_gateway_method_response" "any_method_responses" {
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
+
+  depends_on = [aws_api_gateway_method.any_methods]
 }
 
 # OPTIONS methods (for CORS)
@@ -111,6 +126,8 @@ resource "aws_api_gateway_method" "options_methods" {
   resource_id   = aws_api_gateway_resource.resources[each.key].id
   http_method   = "OPTIONS"
   authorization = "NONE"
+
+  depends_on = [aws_api_gateway_resource.resources]
 }
 
 # OPTIONS integrations
@@ -127,6 +144,8 @@ resource "aws_api_gateway_integration" "options_integrations" {
       statusCode = 200
     })
   }
+
+  depends_on = [aws_api_gateway_method.options_methods]
 }
 
 # OPTIONS integration responses
@@ -143,6 +162,11 @@ resource "aws_api_gateway_integration_response" "options_integration_responses" 
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS,PATCH'"
   }
+
+  depends_on = [
+    aws_api_gateway_method_response.options_method_responses,
+    aws_api_gateway_integration.options_integrations
+  ]
 }
 
 # Method responses for OPTIONS
@@ -159,21 +183,24 @@ resource "aws_api_gateway_method_response" "options_method_responses" {
     "method.response.header.Access-Control-Allow-Methods" = true
     "method.response.header.Access-Control-Allow-Origin"  = true
   }
+
+  depends_on = [aws_api_gateway_method.options_methods]
 }
 
-# Deploy the API to a stage (removed duplicate)
+# Deploy the API to a stage
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-
-  # Terraform automatically determines dependencies, but we're making it explicit
-  depends_on = [
-    aws_api_gateway_integration_response.any_integration_responses,
-    aws_api_gateway_integration_response.options_integration_responses
-  ]
 
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [
+    aws_api_gateway_integration.any_integrations,
+    aws_api_gateway_integration.options_integrations,
+    aws_api_gateway_integration_response.any_integration_responses,
+    aws_api_gateway_integration_response.options_integration_responses
+  ]
 }
 
 resource "aws_api_gateway_stage" "api_stage" {
