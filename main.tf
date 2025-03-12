@@ -39,20 +39,20 @@ resource "aws_api_gateway_rest_api" "api" {
 
 # Required for API Gateway to function
 resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.api.id
+  api_id      = aws_api_gateway_rest_api.api.id
   name        = "$default"
   auto_deploy = true
 }
 
 resource "aws_apigatewayv2_integration" "orchestrator_integration" {
-  api_id             = aws_apigatewayv2_api.api.id
+  api_id             = aws_api_gateway_rest_api.api.id
   integration_type   = "AWS_PROXY"
   integration_method = "POST"
   integration_uri    = aws_lambda_function.orchestrator.invoke_arn
 }
 
 resource "aws_apigatewayv2_route" "orchestrator_route" {
-  api_id    = aws_apigatewayv2_api.api.id
+  api_id    = aws_api_gateway_rest_api.api.id
   route_key = "POST /api/student/query"
   target    = "integrations/${aws_apigatewayv2_integration.orchestrator_integration.id}"
 

@@ -27,7 +27,7 @@ resource "aws_lambda_permission" "api_gateway_orchestrator" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.orchestrator.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
 
 # Worker Lambda functions (in Private Subnet)

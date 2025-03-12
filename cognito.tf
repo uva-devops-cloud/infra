@@ -97,7 +97,7 @@ resource "aws_cognito_user_pool_client" "students_client" {
 #  API GATEWAY JWT AUTHORIZER (USING COGNITO)     #
 ###################################################
 resource "aws_apigatewayv2_authorizer" "students_authorizer" {
-  api_id           = aws_apigatewayv2_api.api.id
+  api_id           = aws_api_gateway_rest_api.api.id
   authorizer_type  = "JWT"
   identity_sources = ["$request.header.Authorization"]
   name             = "studentsCognitoAuthorizer"
