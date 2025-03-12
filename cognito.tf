@@ -93,15 +93,24 @@ resource "aws_cognito_user_pool_client" "students_client" {
 ###################################################
 #  API GATEWAY JWT AUTHORIZER (USING COGNITO)     #
 ###################################################
-resource "aws_apigatewayv2_authorizer" "students_authorizer" {
-  api_id               = aws_apigatewayv2_api.api.id
-  authorizer_type      = "JWT"
-  identity_sources     = ["$request.header.Authorization"]
-  name                 = "studentsCognitoAuthorizer"
-  jwt_configuration {
-    issuer = "https://cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.students.id}"
-    audience = [
-      aws_cognito_user_pool_client.students_client.id
-    ]
-  }
+# Replace the HTTP API authorizer with a REST API authorizer
+# Comment out or remove the old HTTP authorizer
+# resource "aws_apigatewayv2_authorizer" "students_authorizer" {
+#   api_id               = aws_apigatewayv2_api.api.id
+#   authorizer_type      = "JWT"
+#   identity_sources     = ["$request.header.Authorization"]
+#   name                 = "studentsCognitoAuthorizer"
+#   jwt_configuration {
+#     issuer = "https://cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.students.id}"
+#     audience = [
+#       aws_cognito_user_pool_client.students_client.id
+#     ]
+#   }
+# }
+
+resource "aws_api_gateway_authorizer" "students_authorizer" {
+  name          = "studentsCognitoAuthorizer"
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  type          = "COGNITO_USER_POOLS"
+  provider_arns = [aws_cognito_user_pool.students.arn]
 }
