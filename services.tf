@@ -139,9 +139,13 @@ resource "aws_iam_policy" "worker_policy" {
 resource "aws_iam_role_policy_attachment" "orchestrator_policy_attachment" {
   role       = aws_iam_role.orchestrator_lambda_role.name
   policy_arn = aws_iam_policy.orchestrator_policy.arn
+
+  depends_on = [aws_iam_role.orchestrator_lambda_role, aws_iam_policy.orchestrator_policy]
 }
 
 resource "aws_iam_role_policy_attachment" "worker_policy_attachment" {
   role       = aws_iam_role.worker_lambda_role.name
   policy_arn = aws_iam_policy.worker_policy.arn
+
+  depends_on = [aws_iam_role.worker_lambda_role, aws_iam_policy.worker_policy]
 }

@@ -19,6 +19,12 @@ resource "aws_lambda_function" "orchestrator" {
     security_group_ids = [aws_security_group.lambda_sg.id]
   }
 
+  depends_on = [
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    aws_security_group.lambda_sg,
+    aws_subnet.public
+  ]
+
   tags = local.common_tags
 }
 
@@ -28,6 +34,11 @@ resource "aws_lambda_permission" "api_gateway_orchestrator" {
   function_name = aws_lambda_function.orchestrator.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+
+  depends_on = [
+    aws_lambda_function.orchestrator,
+    aws_api_gateway_rest_api.api
+  ]
 }
 
 # Worker Lambda functions (in Private Subnet)

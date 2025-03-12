@@ -13,6 +13,8 @@ resource "aws_cloudwatch_event_rule" "get_student_degree_rule" {
     detail_type = ["GetStudentCurrentDegree"],
   })
 
+  depends_on = [aws_cloudwatch_event_bus.main]
+
   tags = local.common_tags
 }
 

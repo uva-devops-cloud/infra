@@ -15,12 +15,22 @@ resource "aws_subnet" "private_b" {
 
 }
 
+# Add missing route table association for private_b
+resource "aws_route_table_association" "private_b" {
+  subnet_id      = aws_subnet.private_b.id
+  route_table_id = aws_route_table.private.id
+
+  depends_on = [aws_subnet.private_b, aws_route_table.private]
+}
+
 resource "aws_db_subnet_group" "db_subnet_group" {
   name = "rds-subnet-group"
   subnet_ids = [
     aws_subnet.private.id,
     aws_subnet.private_b.id
   ]
+
+  depends_on = [aws_subnet.private, aws_subnet.private_b]
 
   tags = merge(
     local.common_tags,
@@ -49,6 +59,8 @@ resource "aws_security_group" "rds_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  depends_on = [aws_vpc.main]
 
   tags = merge(
     local.common_tags,
@@ -79,6 +91,7 @@ resource "aws_secretsmanager_secret_version" "db_secret_version" {
   secret_id     = aws_secretsmanager_secret.db_secret.id
   secret_string = random_password.db_password.result
 
+  depends_on = [aws_secretsmanager_secret.db_secret, random_password.db_password]
 }
 
 # ----------------------------------------------------------------------------
@@ -114,4 +127,10 @@ module "rds" {
   storage_encrypted = true
 
   tags = local.common_tags
+
+  depends_on = [
+    aws_db_subnet_group.db_subnet_group,
+    aws_security_group.rds_sg,
+    random_password.db_password
+  ]
 }

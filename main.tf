@@ -42,6 +42,8 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_api_gateway_rest_api.api.id
   name        = "$default"
   auto_deploy = true
+
+  depends_on = [aws_api_gateway_rest_api.api]
 }
 
 resource "aws_apigatewayv2_integration" "orchestrator_integration" {
@@ -49,6 +51,8 @@ resource "aws_apigatewayv2_integration" "orchestrator_integration" {
   integration_type   = "AWS_PROXY"
   integration_method = "POST"
   integration_uri    = aws_lambda_function.orchestrator.invoke_arn
+
+  depends_on = [aws_api_gateway_rest_api.api, aws_lambda_function.orchestrator]
 }
 
 resource "aws_apigatewayv2_route" "orchestrator_route" {
@@ -58,4 +62,9 @@ resource "aws_apigatewayv2_route" "orchestrator_route" {
 
   authorizer_id      = aws_apigatewayv2_authorizer.students_authorizer.id
   authorization_type = "JWT"
+
+  depends_on = [
+    aws_apigatewayv2_integration.orchestrator_integration,
+    aws_apigatewayv2_authorizer.students_authorizer
+  ]
 }

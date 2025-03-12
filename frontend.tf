@@ -15,6 +15,8 @@ resource "aws_s3_bucket_website_configuration" "frontend_bucket_website" {
   error_document {
     key = "index.html"
   }
+
+  depends_on = [aws_s3_bucket.frontend_bucket]
 }
 
 resource "aws_cloudfront_distribution" "frontend_distribution" {
@@ -95,6 +97,8 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     cloudfront_default_certificate = true
   }
 
+  depends_on = [aws_s3_bucket.frontend_bucket, aws_cloudfront_origin_access_identity.frontend_identity]
+
   tags = local.common_tags
 
 }
@@ -118,4 +122,6 @@ resource "aws_s3_bucket_policy" "frontend_bucket_policy" {
       }
     ]
   })
+
+  depends_on = [aws_s3_bucket.frontend_bucket, aws_cloudfront_origin_access_identity.frontend_identity]
 }
