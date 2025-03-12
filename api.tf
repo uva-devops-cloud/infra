@@ -23,10 +23,10 @@ resource "aws_api_gateway_gateway_response" "cors" {
 # Define endpoints to create
 locals {
   endpoints = {
-    "student"           = { mock_response = { name = "John Doe", email = "john.doe@student.uva.nl", start_year = 2022, graduation_year = 2026, address = "123 Amsterdam Street" } }
-    "programs"          = { mock_response = [] }
-    "courses"           = { mock_response = [] }
-    "usage_information" = { mock_response = {} }
+    "student_new"           = { mock_response = { name = "John Doe", email = "john.doe@student.uva.nl", start_year = 2022, graduation_year = 2026, address = "123 Amsterdam Street" } }
+    "programs_new"          = { mock_response = [] }
+    "courses_new"           = { mock_response = [] }
+    "usage_information_new" = { mock_response = {} }
   }
 }
 
