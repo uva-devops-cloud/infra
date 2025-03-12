@@ -5,11 +5,6 @@ resource "aws_s3_bucket" "frontend_bucket" {
 
 }
 
-resource "aws_s3_bucket_acl" "frontend_bucket_acl" {
-  bucket = aws_s3_bucket.frontend_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_website_configuration" "frontend_bucket_website" {
   bucket = aws_s3_bucket.frontend_bucket.id
 
@@ -106,4 +101,21 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
 resource "aws_cloudfront_origin_access_identity" "frontend_identity" {
   comment = "Origin Access Identity for StudentPortal Frontend CloudFront Distribution"
+}
+
+resource "aws_s3_bucket_policy" "frontend_bucket_policy" {
+  bucket = aws_s3_bucket.frontend_bucket.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.frontend_identity.id}"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.frontend_bucket.arn}/*"
+      }
+    ]
+  })
 }
