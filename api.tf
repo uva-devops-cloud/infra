@@ -187,6 +187,59 @@ resource "aws_api_gateway_method_response" "options_method_responses" {
   depends_on = [aws_api_gateway_method.options_methods]
 }
 
+# Add root resource method and integration
+resource "aws_api_gateway_method" "root_method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_rest_api.api.root_resource_id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "root_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_rest_api.api.root_resource_id
+  http_method = aws_api_gateway_method.root_method.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+resource "aws_api_gateway_method_response" "root_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_rest_api.api.root_resource_id
+  http_method = aws_api_gateway_method.root_method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Headers" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "root_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_rest_api.api.root_resource_id
+  http_method = aws_api_gateway_method.root_method.http_method
+  status_code = aws_api_gateway_method_response.root_method_response.status_code
+
+  response_templates = {
+    "application/json" = jsonencode({
+      message = "Welcome to Student Portal API"
+    })
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+  }
+}
+
 # Deploy the API to a stage
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -221,7 +274,12 @@ resource "aws_api_gateway_deployment" "api_deployment" {
     aws_api_gateway_method_response.options_method_responses,
     aws_api_gateway_integration_response.any_integration_responses,
     aws_api_gateway_integration_response.options_integration_responses,
-    aws_api_gateway_authorizer.students_authorizer
+    aws_api_gateway_authorizer.students_authorizer,
+    # Add root resources
+    aws_api_gateway_method.root_method,
+    aws_api_gateway_integration.root_integration,
+    aws_api_gateway_method_response.root_method_response,
+    aws_api_gateway_integration_response.root_integration_response
   ]
 }
 
