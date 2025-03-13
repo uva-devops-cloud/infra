@@ -86,6 +86,20 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     default_ttl            = 0
     max_ttl                = 0
   }
+# Added error handling to redirect to correct page for SSO
+  custom_error_response {
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 0
+  }
+  
+  custom_error_response {
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+    error_caching_min_ttl = 0
+  }
 
   restrictions {
     geo_restriction {
