@@ -83,7 +83,7 @@ resource "aws_cognito_user_pool_client" "students_client" {
 
   # Where to send users after they log out
   logout_urls = [
-    "http://localhost:5173",
+    "http://localhost:5173/login",
     "https://${aws_cloudfront_distribution.frontend_distribution.domain_name}/login"
   ]
 
