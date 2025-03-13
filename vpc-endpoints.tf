@@ -1,4 +1,4 @@
-# VPC Endpoint for EventBridge to allow Lambda in private subnet to access EventBridge
+# VPC Endpoint for EventBridge (from previous implementation)
 resource "aws_vpc_endpoint" "events" {
   vpc_id              = aws_vpc.main.id
   service_name        = "com.amazonaws.${var.aws_region}.events"
@@ -11,6 +11,40 @@ resource "aws_vpc_endpoint" "events" {
     local.common_tags,
     {
       Name = "events-vpc-endpoint"
+    }
+  )
+}
+
+# Add the new endpoints below:
+
+# VPC Endpoint for Secrets Manager
+resource "aws_vpc_endpoint" "secretsmanager" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${var.aws_region}.secretsmanager"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.private.id]
+  security_group_ids  = [aws_security_group.lambda_sg.id]
+  private_dns_enabled = true
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "secretsmanager-vpc-endpoint"
+    }
+  )
+}
+
+# VPC Endpoint for S3
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.private.id]
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "s3-vpc-endpoint"
     }
   )
 }
