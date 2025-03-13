@@ -17,20 +17,6 @@ resource "aws_cognito_user_pool" "students" {
   # Keep any existing attributes that might be there
   # but not explicitly defined in Terraform
   
-  # Add all the new attributes you need
-  schema {
-    attribute_data_type = "String"
-    name                = "given_name"
-    required            = false  # Start with false, can make true later
-    mutable             = true
-  }
-
-  schema {
-    attribute_data_type = "String" 
-    name                = "family_name"
-    required            = false
-    mutable             = true
-  }
 
   schema {
     attribute_data_type = "String"  # Use String for birthdate initially
