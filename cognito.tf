@@ -14,15 +14,48 @@ resource "aws_cognito_user_pool" "students" {
     require_lowercase = true
   }
 
-  schema { // Update to FirstName, LastName depending on DB
+  # Keep schema definitions for documentation, but Terraform will ignore them
+  schema {
     attribute_data_type = "String"
-    name                = "name"
-    required            = true
+    name                = "given_name"
+    required            = false
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String" 
+    name                = "family_name"
+    required            = false
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "custom:birthdate"
+    required            = false
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "custom:user_address"
+    required            = false
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "custom:user_phone"
+    required            = false
     mutable             = true
   }
 
   tags = local.common_tags
 
+  # This is the key part - add this lifecycle block
+  lifecycle {
+    ignore_changes = [schema]
+  }
 }
 
 ################################################
