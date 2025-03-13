@@ -1,11 +1,22 @@
 resource "aws_s3_bucket" "frontend_bucket" {
   bucket = "studentportal-frontend-bucket-${data.aws_caller_identity.current.account_id}"
-  acl    = "private"
 
-  website {
-    index_document = "index.html"
-    error_document = "index.html"
+  tags = local.common_tags
+
+}
+
+resource "aws_s3_bucket_website_configuration" "frontend_bucket_website" {
+  bucket = aws_s3_bucket.frontend_bucket.id
+
+  index_document {
+    suffix = "index.html"
   }
+
+  error_document {
+    key = "index.html"
+  }
+
+  depends_on = [aws_s3_bucket.frontend_bucket]
 }
 
 resource "aws_cloudfront_distribution" "frontend_distribution" {
@@ -34,6 +45,9 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   is_ipv6_enabled     = true
   comment             = "StudentPortal Frontend CloudFront Distribution"
   default_root_object = "index.html"
+
+  # Use the cheapest price class (US, Canada, Europe)
+  price_class = "PriceClass_100"
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
@@ -82,8 +96,32 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  depends_on = [aws_s3_bucket.frontend_bucket, aws_cloudfront_origin_access_identity.frontend_identity]
+
+  tags = local.common_tags
+
 }
 
 resource "aws_cloudfront_origin_access_identity" "frontend_identity" {
   comment = "Origin Access Identity for StudentPortal Frontend CloudFront Distribution"
+}
+
+resource "aws_s3_bucket_policy" "frontend_bucket_policy" {
+  bucket = aws_s3_bucket.frontend_bucket.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.frontend_identity.id}"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.frontend_bucket.arn}/*"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket.frontend_bucket, aws_cloudfront_origin_access_identity.frontend_identity]
 }

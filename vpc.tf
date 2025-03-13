@@ -2,9 +2,13 @@ resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags = {
-    Name = "studentportal-vpc"
-  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "studentportal-vpc"
+    }
+  )
 }
 
 resource "aws_subnet" "public" {
@@ -13,9 +17,12 @@ resource "aws_subnet" "public" {
   availability_zone       = var.availability_zone
   map_public_ip_on_launch = true
 
-  tags = {
-    Name = "public-subnet"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "public-subnet"
+    }
+  )
 
   depends_on = [aws_vpc.main]
 }
@@ -25,9 +32,12 @@ resource "aws_subnet" "private" {
   cidr_block        = var.private_subnet_cidr
   availability_zone = var.availability_zone
 
-  tags = {
-    Name = "private-subnet"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "private-subnet"
+    }
+  )
 
   depends_on = [aws_vpc.main]
 }
@@ -36,33 +46,15 @@ resource "aws_subnet" "private" {
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "main-igw"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "main-igw"
+    }
+  )
 
   depends_on = [aws_vpc.main]
 }
-
-# Elastic IP for NAT Gateway
-# resource "aws_eip" "nat" {
-#   domain = "vpc"
-
-#   tags = {
-#     Name = "nat-eip"
-#   }
-# }
-
-# Allows only outbound internet traffic for resources in a private subnet
-# resource "aws_nat_gateway" "nat" {
-#   allocation_id = aws_eip.nat.id
-#   subnet_id     = aws_subnet.public.id
-
-#   tags = {
-#     Name = "nat-gateway"
-#   }
-
-#   depends_on = [aws_subnet.public, aws_eip.nat]
-# }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -72,9 +64,12 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.igw.id
   }
 
-  tags = {
-    Name = "public-route-table"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "public-route-table"
+    }
+  )
 
   depends_on = [aws_internet_gateway.igw]
 }
@@ -90,9 +85,12 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "private-route-table"
-  }
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "private-route-table"
+    }
+  )
 
   depends_on = [aws_vpc.main]
 }
