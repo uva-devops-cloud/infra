@@ -41,14 +41,14 @@ resource "aws_cognito_user_pool" "students" {
 
   schema {
     attribute_data_type = "String"
-    name                = "address"  # Standard attribute
+    name                = "custom:user_address"  # Renamed to avoid conflicts
     required            = false
     mutable             = true
   }
 
   schema {
     attribute_data_type = "String"
-    name                = "phone_number"  # Standard attribute
+    name                = "custom:user_phone"  # Renamed to avoid conflicts  
     required            = false
     mutable             = true
   }
