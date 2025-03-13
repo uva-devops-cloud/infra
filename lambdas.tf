@@ -23,9 +23,15 @@ resource "aws_lambda_function" "orchestrator" {
     }
   }
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.orchestrator_policy_attachment
   ]
+
+
 
   tags = local.common_tags
 }
