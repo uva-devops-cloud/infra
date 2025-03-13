@@ -14,9 +14,38 @@ resource "aws_cognito_user_pool" "students" {
     require_lowercase = true
   }
 
-  schema { // Update to FirstName, LastName depending on DB
+  // Replace existing name attribute with these attributes
+  schema {
     attribute_data_type = "String"
-    name                = "name"
+    name                = "given_name"
+    required            = true
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "family_name"
+    required            = true
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "DateTime"  // Changed from String to DateTime
+    name                = "birthdate"
+    required            = true
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "address"
+    required            = true
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "phone_number"
     required            = true
     mutable             = true
   }
