@@ -20,7 +20,9 @@ resource "aws_lambda_function" "db_migration" {
   role          = aws_iam_role.worker_lambda_role.arn
   handler       = "index.handler"
   runtime       = "nodejs18.x"
-  timeout       = 60
+  timeout       = 300 # Increased from 60 to 300 seconds (5 minutes)
+  memory_size   = 256 # Also increase memory for better performance
+
 
   filename = "${path.module}/dummy_lambda.zip" # Placeholder
 
