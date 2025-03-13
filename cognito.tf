@@ -77,13 +77,17 @@ resource "aws_cognito_user_pool_client" "students_client" {
 
   # Allowed callback URLs after user logs in
   callback_urls = [
-    "http://localhost:3000",
+    "http://localhost:5173/login",
+    "http://localhost:5173/login",
+    "${aws_cloudfront_distribution.frontend_distribution.domain_name}/login"
     # Add your production URLs here
   ]
 
   # Where to send users after they log out
   logout_urls = [
-    "http://localhost:3000"
+    "http://localhost:5173/login",
+    "http://localhost:5173/login",
+    "${aws_cloudfront_distribution.frontend_distribution.domain_name}/login"
   ]
 
   # If you want to enable the OAuth flows in the Hosted UI
