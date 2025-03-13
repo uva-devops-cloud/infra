@@ -14,32 +14,48 @@ resource "aws_cognito_user_pool" "students" {
     require_lowercase = true
   }
 
-  # Keep any existing attributes that might be there
-  # but not explicitly defined in Terraform
-  
+  # Keep schema definitions for documentation, but Terraform will ignore them
+  schema {
+    attribute_data_type = "String"
+    name                = "given_name"
+    required            = false
+    mutable             = true
+  }
 
   schema {
-    attribute_data_type = "String"  # Use String for birthdate initially
-    name                = "custom:birthdate"  # Use custom attribute to avoid conflict
+    attribute_data_type = "String" 
+    name                = "family_name"
     required            = false
     mutable             = true
   }
 
   schema {
     attribute_data_type = "String"
-    name                = "custom:user_address"  # Renamed to avoid conflicts
+    name                = "custom:birthdate"
     required            = false
     mutable             = true
   }
 
   schema {
     attribute_data_type = "String"
-    name                = "custom:user_phone"  # Renamed to avoid conflicts  
+    name                = "custom:user_address"
+    required            = false
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "custom:user_phone"
     required            = false
     mutable             = true
   }
 
   tags = local.common_tags
+
+  # This is the key part - add this lifecycle block
+  lifecycle {
+    ignore_changes = [schema]
+  }
 }
 
 ################################################
