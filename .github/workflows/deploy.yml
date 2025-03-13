@@ -20,6 +20,7 @@ jobs:
       aws_account_id: "474668415523"
     secrets:
       google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
 
   deploy-prod:
     name: Deploy to Prod
@@ -31,3 +32,4 @@ jobs:
       aws_account_id: "054037129431"
     secrets:
       google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}

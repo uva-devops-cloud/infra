@@ -12,6 +12,8 @@ on:
     secrets:
       google_client_secret:
         required: true
+      ssh_public_key:
+        required: true
 
 permissions:
   id-token: write
@@ -56,6 +58,7 @@ jobs:
           terraform plan \
             -var="google_client_secret=${{ secrets.google_client_secret }}" \
             -var="environment=${{ inputs.environment }}" \
+            -var="ssh_public_key=${{ secrets.ssh_public_key }}" \
             -out=tfplan
         working-directory: .
 
