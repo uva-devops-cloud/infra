@@ -14,44 +14,46 @@ resource "aws_cognito_user_pool" "students" {
     require_lowercase = true
   }
 
-  // Replace existing name attribute with these attributes
+  # Keep any existing attributes that might be there
+  # but not explicitly defined in Terraform
+  
+  # Add all the new attributes you need
   schema {
     attribute_data_type = "String"
     name                = "given_name"
-    required            = true
+    required            = false  # Start with false, can make true later
     mutable             = true
   }
 
   schema {
-    attribute_data_type = "String"
+    attribute_data_type = "String" 
     name                = "family_name"
-    required            = true
+    required            = false
     mutable             = true
   }
 
   schema {
-    attribute_data_type = "DateTime"  // Changed from String to DateTime
-    name                = "birthdate"
-    required            = true
-    mutable             = true
-  }
-
-  schema {
-    attribute_data_type = "String"
-    name                = "address"
-    required            = true
+    attribute_data_type = "String"  # Use String for birthdate initially
+    name                = "custom:birthdate"  # Use custom attribute to avoid conflict
+    required            = false
     mutable             = true
   }
 
   schema {
     attribute_data_type = "String"
-    name                = "phone_number"
-    required            = true
+    name                = "address"  # Standard attribute
+    required            = false
+    mutable             = true
+  }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "phone_number"  # Standard attribute
+    required            = false
     mutable             = true
   }
 
   tags = local.common_tags
-
 }
 
 ################################################
