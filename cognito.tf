@@ -79,7 +79,7 @@ resource "aws_cognito_user_pool_client" "students_client" {
   callback_urls = [
     "http://localhost:5173/login",
     "http://localhost:5173/login",
-    "${aws_cloudfront_distribution.frontend_distribution.domain_name}/login"
+    "https://${aws_cloudfront_distribution.frontend_distribution.domain_name}/login"
     # Add your production URLs here
   ]
 
@@ -87,7 +87,7 @@ resource "aws_cognito_user_pool_client" "students_client" {
   logout_urls = [
     "http://localhost:5173/login",
     "http://localhost:5173/login",
-    "${aws_cloudfront_distribution.frontend_distribution.domain_name}/login"
+    "https://${aws_cloudfront_distribution.frontend_distribution.domain_name}/login"
   ]
 
   # If you want to enable the OAuth flows in the Hosted UI
