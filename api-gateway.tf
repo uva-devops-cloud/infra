@@ -11,7 +11,8 @@ resource "aws_api_gateway_deployment" "default" {
 
   depends_on = [
     aws_api_gateway_integration.example,
-    aws_api_gateway_integration.orchestrator_integration
+    aws_api_gateway_integration.orchestrator_integration,
+    aws_api_gateway_integration.db_migrate_integration
   ]
 }
 
