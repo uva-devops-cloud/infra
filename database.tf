@@ -48,6 +48,9 @@ resource "random_password" "db_password" {
   length  = 16
   special = true
 
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "aws_secretsmanager_secret" "db_secret" {
@@ -92,7 +95,7 @@ module "rds" {
 
   # Snapshots/backups
   skip_final_snapshot     = false
-  backup_retention_period = 7
+  backup_retention_period = 0
 
   storage_encrypted = true
 
