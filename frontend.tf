@@ -30,7 +30,7 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   origin {
-    domain_name = "yj2nmxb5j7.execute-api.eu-west-2.amazonaws.com"
+    domain_name = "3q336xufi6.execute-api.eu-west-2.amazonaws.com"  // Update this line
     origin_id   = "API-Gateway-Origin"
 
     custom_origin_config {
