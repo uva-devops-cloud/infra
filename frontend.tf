@@ -30,9 +30,9 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   origin {
-    domain_name = "3q336xufi6.execute-api.eu-west-2.amazonaws.com"  // Update this line
+    domain_name = "3q336xufi6.execute-api.eu-west-2.amazonaws.com/dev"  // Include /dev stage
     origin_id   = "API-Gateway-Origin"
-
+    
     custom_origin_config {
       http_port              = 80
       https_port             = 443
