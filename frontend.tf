@@ -30,7 +30,8 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   origin {
-    domain_name = "3q336xufi6.execute-api.eu-west-2.amazonaws.com/dev"  // Include /dev stage
+    domain_name = "3q336xufi6.execute-api.eu-west-2.amazonaws.com"  
+    origin_path = "/dev"  
     origin_id   = "API-Gateway-Origin"
     
     custom_origin_config {
