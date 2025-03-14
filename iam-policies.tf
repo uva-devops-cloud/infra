@@ -87,3 +87,56 @@ resource "aws_iam_policy" "worker_policy" {
     ]
   })
 }
+
+# Role for the profile update Lambda
+resource "aws_iam_role" "update_profile_role" {
+  name = "lambda-update-profile-role"
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+  
+  tags = local.common_tags
+}
+
+# Policy allowing the Lambda to update user attributes in Cognito
+resource "aws_iam_policy" "update_profile_policy" {
+  name        = "lambda-update-profile-policy"
+  description = "Allow Lambda to update user attributes in Cognito"
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "arn:aws:logs:*:*:*",
+        Effect = "Allow"
+      },
+      {
+        Action = [
+          "cognito-idp:AdminUpdateUserAttributes",
+          "cognito-idp:AdminGetUser"
+        ],
+        Resource = aws_cognito_user_pool.students.arn,
+        Effect = "Allow"
+      }
+    ]
+  })
+}
+
+# Attach the policy to the role
+resource "aws_iam_role_policy_attachment" "update_profile_policy_attachment" {
+  role       = aws_iam_role.update_profile_role.name
+  policy_arn = aws_iam_policy.update_profile_policy.arn
+}

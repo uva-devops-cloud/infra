@@ -97,6 +97,25 @@ resource "aws_lambda_function" "get_student_courses" {
   tags = local.common_tags
 }
 
+# Lambda function for updating user profiles
+resource "aws_lambda_function" "update_profile" {
+  function_name = "update-user-profile"
+  role          = aws_iam_role.update_profile_role.arn
+  filename      = "${path.module}/dummy_lambda.zip" # This will be replaced by actual deployment
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  timeout       = 30
+  memory_size   = 256
+  
+  environment {
+    variables = {
+      USER_POOL_ID = aws_cognito_user_pool.students.id
+    }
+  }
+  
+  tags = local.common_tags
+}
+
 # Worker Lambda functions (in Private Subnet)
 # resource "aws_lambda_function" "get_student_degree" {
 #   function_name = "get-student-degree"
