@@ -24,3 +24,4 @@ alert_email_addresses = [
   "admin@example.com",
   "devops@example.com"
 ]
+

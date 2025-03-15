@@ -100,3 +100,8 @@ variable "alert_email_addresses" {
   type        = list(string)
   default     = ["admin@example.com"]
 }
+
+variable "environment" {
+  type    = string
+  default = "dev"
+}

@@ -99,3 +99,23 @@ output "llm_api_key_secret_arn" {
   description = "ARN of the LLM API key secret (if created)"
   value       = aws_secretsmanager_secret.llm_api_key.arn
 }
+
+output "student_data_lambda_arn" {
+  description = "ARN of the get_student_data Lambda function"
+  value       = aws_lambda_function.get_student_data.arn
+}
+
+output "student_data_lambda_name" {
+  description = "Name of the get_student_data Lambda function"
+  value       = aws_lambda_function.get_student_data.function_name
+}
+
+output "student_courses_lambda_arn" {
+  description = "ARN of the get_student_courses Lambda function"
+  value       = aws_lambda_function.get_student_courses.arn
+}
+
+output "student_courses_lambda_name" {
+  description = "Name of the get_student_courses Lambda function"
+  value       = aws_lambda_function.get_student_courses.function_name
+}
