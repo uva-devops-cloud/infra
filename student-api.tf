@@ -154,4 +154,17 @@ resource "aws_api_gateway_integration_response" "update_profile_put_integration_
   ]
 }
 
+resource "aws_api_gateway_method_response" "profile_put_response_200" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.profile_resource.id
+  http_method = aws_api_gateway_method.profile_put.http_method
+  status_code = "200"
+  
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"      = true
+    "method.response.header.Access-Control-Allow-Headers"     = true
+    "method.response.header.Access-Control-Allow-Methods"     = true
+  }
+}
+
 

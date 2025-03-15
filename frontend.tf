@@ -70,13 +70,18 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
   ordered_cache_behavior {
     path_pattern     = "/api/*"
-    allowed_methods  = ["HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"] # Added HEAD
+    allowed_methods  = ["HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"] 
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "API-Gateway-Origin"
 
     forwarded_values {
       query_string = true
-      headers      = ["Authorization"]
+      headers      = [
+        "Authorization",
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+      ]
       cookies {
         forward = "all"
       }
