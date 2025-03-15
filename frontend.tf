@@ -70,13 +70,13 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
 
   ordered_cache_behavior {
     path_pattern     = "/api/*"
-    allowed_methods  = ["HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"] # Added HEAD
+    allowed_methods  = ["HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "API-Gateway-Origin"
 
     forwarded_values {
       query_string = true
-      headers      = ["Authorization"]
+      headers      = ["Authorization", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"]
       cookies {
         forward = "all"
       }
@@ -87,7 +87,8 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     default_ttl            = 0
     max_ttl                = 0
   }
-# Added error handling to redirect to correct page for SSO
+
+  # Added error handling to redirect to correct page for SSO
   custom_error_response {
     error_code            = 403
     response_code         = 200
