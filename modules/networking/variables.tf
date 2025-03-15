@@ -34,9 +34,3 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-
-variable "create_streamlit_sg" {
-  description = "Whether to create a security group for Streamlit"
-  type        = bool
-  default     = false
-}

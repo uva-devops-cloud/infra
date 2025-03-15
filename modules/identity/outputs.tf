@@ -30,15 +30,15 @@ output "hosted_ui_url" {
 
 output "identity_pool_id" {
   description = "ID of the Cognito Identity Pool (if created)"
-  value       = var.create_identity_pool ? aws_cognito_identity_pool.main[0].id : null
+  value       = aws_cognito_identity_pool.main.id
 }
 
 output "authenticated_role_arn" {
   description = "ARN of the authenticated role (if identity pool created)"
-  value       = var.create_identity_pool ? aws_iam_role.authenticated[0].arn : null
+  value       = aws_iam_role.authenticated.arn
 }
 
 output "jwt_authorizer_id" {
   description = "ID of the JWT authorizer for API Gateway (if created)"
-  value       = var.api_id != null ? aws_apigatewayv2_authorizer.cognito[0].id : null
+  value       = aws_apigatewayv2_authorizer.cognito.id
 }

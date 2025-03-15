@@ -39,12 +39,6 @@ variable "zone_id" {
   default     = null
 }
 
-variable "create_streamlit" {
-  description = "Whether to create a Streamlit instance"
-  type        = bool
-  default     = false
-}
-
 variable "vpc_id" {
   description = "ID of the VPC for Streamlit resources"
   type        = string

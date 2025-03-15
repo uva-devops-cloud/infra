@@ -58,13 +58,6 @@ variable "rds_cpu_threshold" {
   default     = 80
 }
 
-# Alarms
-variable "create_sns_topic" {
-  description = "Whether to create an SNS topic for alarms"
-  type        = bool
-  default     = false
-}
-
 variable "alarm_actions" {
   description = "List of ARNs to notify when alarm transitions to ALARM state"
   type        = list(string)
@@ -81,13 +74,6 @@ variable "email_notifications" {
   description = "List of email addresses to subscribe to the SNS topic"
   type        = list(string)
   default     = []
-}
-
-# Health Check
-variable "create_health_check_rule" {
-  description = "Whether to create an EventBridge rule for health checks"
-  type        = bool
-  default     = false
 }
 
 variable "health_check_schedule" {

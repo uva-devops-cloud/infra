@@ -20,13 +20,6 @@ variable "aws_region" {
   type        = string
 }
 
-# VPC Endpoint Variables
-variable "create_vpc_endpoint" {
-  description = "Whether to create VPC endpoint for EventBridge"
-  type        = bool
-  default     = false
-}
-
 variable "vpc_id" {
   description = "ID of the VPC"
   type        = string

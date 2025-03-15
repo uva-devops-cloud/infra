@@ -35,7 +35,7 @@ output "rds_security_group_id" {
 
 output "streamlit_security_group_id" {
   description = "ID of the Streamlit security group"
-  value       = var.create_streamlit_sg ? aws_security_group.streamlit_sg[0].id : null
+  value       = aws_security_group.streamlit_sg.id
 }
 
 output "internet_gateway_id" {

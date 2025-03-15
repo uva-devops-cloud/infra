@@ -125,7 +125,7 @@ resource "aws_cognito_user_pool_client" "web_client" {
   logout_urls   = var.logout_urls
 
   # Include Google in identity providers if enabled
-  supported_identity_providers = var.enable_google_auth ? ["COGNITO", "Google"] : ["COGNITO"]
+  supported_identity_providers = ["COGNITO", "Google"]
 
   depends_on = [aws_cognito_identity_provider.google]
 }
@@ -194,7 +194,7 @@ resource "aws_iam_role" "authenticated" {
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringEquals = {
-            "cognito-identity.amazonaws.com:aud" = aws_cognito_identity_pool.main[0].id
+            "cognito-identity.amazonaws.com:aud" = aws_cognito_identity_pool.main.id
           },
           "ForAnyValue:StringLike" = {
             "cognito-identity.amazonaws.com:amr" = "authenticated"

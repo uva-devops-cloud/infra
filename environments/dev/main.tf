@@ -90,7 +90,6 @@ module "identity" {
   prefix      = var.prefix
   environment = var.environment
 
-  enable_google_auth   = true
   google_client_id     = var.google_client_id
   google_client_secret = var.google_client_secret
 
@@ -116,7 +115,6 @@ module "frontend" {
   prefix      = var.prefix
   environment = var.environment
 
-  create_streamlit = true
   vpc_id           = module.networking.vpc_id
   public_subnet_id = module.networking.public_subnet_id
   ssh_public_key   = var.ssh_public_key
@@ -144,7 +142,6 @@ module "monitoring" {
 
   db_instance_id = module.database.db_instance_id
 
-  create_sns_topic    = true
   email_notifications = ["admin@example.com"] // Replace with your email
 
   tags = local.common_tags
@@ -184,10 +181,9 @@ module "events" {
   update_profile_lambda_name = module.compute.update_profile_lambda_name
 
   # VPC configuration
-  create_vpc_endpoint = true
-  vpc_id              = module.networking.vpc_id
-  vpc_cidr            = var.vpc_cidr
-  private_subnet_ids  = [module.networking.private_subnet_id]
+  vpc_id             = module.networking.vpc_id
+  vpc_cidr           = var.vpc_cidr
+  private_subnet_ids = [module.networking.private_subnet_id]
 
   tags = local.common_tags
 }

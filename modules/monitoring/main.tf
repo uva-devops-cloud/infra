@@ -141,8 +141,8 @@ resource "aws_cloudwatch_metric_alarm" "api_error_rate" {
     ApiId = var.api_id
   }
 
-  alarm_actions = var.create_sns_topic ? [aws_sns_topic.alerts[0].arn] : var.alarm_actions
-  ok_actions    = var.create_sns_topic ? [aws_sns_topic.alerts[0].arn] : var.ok_actions
+  alarm_actions = [aws_sns_topic.alerts.arn]
+  ok_actions    = [aws_sns_topic.alerts.arn]
 
   tags = var.tags
 }
@@ -163,8 +163,8 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
     FunctionName = var.lambda_function_names[0] # Just monitor the first function as an example
   }
 
-  alarm_actions = var.create_sns_topic ? [aws_sns_topic.alerts[0].arn] : var.alarm_actions
-  ok_actions    = var.create_sns_topic ? [aws_sns_topic.alerts[0].arn] : var.ok_actions
+  alarm_actions = [aws_sns_topic.alerts.arn]
+  ok_actions    = [aws_sns_topic.alerts.arn]
 
   tags = var.tags
 }
@@ -185,8 +185,8 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu_utilization" {
     DBInstanceIdentifier = var.db_instance_id
   }
 
-  alarm_actions = var.create_sns_topic ? [aws_sns_topic.alerts[0].arn] : var.alarm_actions
-  ok_actions    = var.create_sns_topic ? [aws_sns_topic.alerts[0].arn] : var.ok_actions
+  alarm_actions = [aws_sns_topic.alerts.arn]
+  ok_actions    = [aws_sns_topic.alerts.arn]
 
   tags = var.tags
 }
@@ -203,9 +203,8 @@ resource "aws_sns_topic" "alerts" {
 }
 
 resource "aws_sns_topic_subscription" "email" {
-  count = var.create_sns_topic && length(var.email_notifications) > 0 ? length(var.email_notifications) : 0
 
-  topic_arn = aws_sns_topic.alerts[0].arn
+  topic_arn = aws_sns_topic.alerts.arn
   protocol  = "email"
   endpoint  = var.email_notifications[count.index]
 }

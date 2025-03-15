@@ -27,18 +27,6 @@ variable "logout_urls" {
   default     = ["http://localhost:3000"]
 }
 
-variable "create_identity_pool" {
-  description = "Whether to create a Cognito Identity Pool"
-  type        = bool
-  default     = false
-}
-
-variable "enable_google_auth" {
-  description = "Whether to enable Google as an identity provider"
-  type        = bool
-  default     = false
-}
-
 variable "google_client_id" {
   description = "Client ID for Google identity provider"
   type        = string

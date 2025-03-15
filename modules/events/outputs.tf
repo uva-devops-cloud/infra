@@ -30,15 +30,15 @@ output "update_profile_rule_arn" {
 
 output "vpc_endpoint_id" {
   description = "ID of the EventBridge VPC endpoint (if created)"
-  value       = var.create_vpc_endpoint ? aws_vpc_endpoint.eventbridge[0].id : null
+  value       = aws_vpc_endpoint.eventbridge.id
 }
 
 output "vpc_endpoint_dns" {
   description = "DNS entries of the EventBridge VPC endpoint (if created)"
-  value       = var.create_vpc_endpoint ? aws_vpc_endpoint.eventbridge[0].dns_entry : null
+  value       = aws_vpc_endpoint.eventbridge.dns_entry
 }
 
 output "eventbridge_security_group_id" {
   description = "ID of the EventBridge VPC endpoint security group (if created)"
-  value       = var.create_vpc_endpoint ? aws_security_group.eventbridge_endpoint.id : null
+  value       = aws_security_group.eventbridge_endpoint.id
 }

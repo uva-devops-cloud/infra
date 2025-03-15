@@ -15,13 +15,6 @@ variable "tags" {
   default     = {}
 }
 
-# S3 configuration
-variable "create_bucket" {
-  description = "Whether to create a new S3 bucket for migrations"
-  type        = bool
-  default     = true
-}
-
 variable "existing_bucket_name" {
   description = "Name of an existing S3 bucket for migrations (if create_bucket is false)"
   type        = string
@@ -84,13 +77,6 @@ variable "db_secret_arn" {
 variable "db_name" {
   description = "Name of the database to run migrations on"
   type        = string
-}
-
-# Trigger configuration
-variable "enable_s3_trigger" {
-  description = "Whether to enable automatic triggering of the Lambda when files are uploaded to S3"
-  type        = bool
-  default     = true
 }
 
 variable "api_execution_arn" {
