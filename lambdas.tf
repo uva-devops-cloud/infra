@@ -106,13 +106,25 @@ resource "aws_lambda_function" "update_profile" {
   runtime       = "nodejs18.x"
   timeout       = 30
   memory_size   = 256
-  
+
   environment {
     variables = {
       USER_POOL_ID = aws_cognito_user_pool.students.id
     }
   }
-  
+
+  tags = local.common_tags
+}
+
+resource "aws_lambda_function" "hello_world_lambda" {
+  function_name = "hello_world"
+  role          = aws_iam_role.worker_lambda_role.arn
+  filename      = "${path.module}/dummy_lambda.zip" # This will be replaced by your actual deployment
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  timeout       = 10
+  memory_size   = 128
+
   tags = local.common_tags
 }
 
