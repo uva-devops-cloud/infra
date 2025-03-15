@@ -4,7 +4,7 @@ resource "aws_s3_bucket" "lambda_bucket" {
   tags   = local.common_tags
 }
 
-# Block public access to migration scripts
+# Block access to bucket
 resource "aws_s3_bucket_public_access_block" "lambda_bucket_block" {
   bucket = aws_s3_bucket.lambda_bucket.id
 

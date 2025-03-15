@@ -1,3 +1,19 @@
+# S3 bucket for storing migration scripts
+resource "aws_s3_bucket" "migrations_bucket" {
+  bucket = "db-migrations-${data.aws_caller_identity.current.account_id}"
+  tags   = local.common_tags
+}
+
+# Block public access to migration scripts
+resource "aws_s3_bucket_public_access_block" "migrations_bucket_block" {
+  bucket = aws_s3_bucket.migrations_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # Lambda function to run migrations
 resource "aws_lambda_function" "db_migration" {
   function_name = "db-migration-runner"
@@ -15,7 +31,7 @@ resource "aws_lambda_function" "db_migration" {
       DB_SECRET_ARN     = aws_secretsmanager_secret.db_secret.arn
       DB_HOST           = module.rds.db_instance_address
       DB_NAME           = "studentportal"
-      MIGRATIONS_BUCKET = aws_s3_bucket.lambda_bucket.bucket
+      MIGRATIONS_BUCKET = aws_s3_bucket.migrations_bucket.bucket
     }
   }
 
