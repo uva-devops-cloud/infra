@@ -153,3 +153,26 @@ resource "aws_api_gateway_integration_response" "update_profile_put_integration_
     aws_api_gateway_integration.update_profile_integration
   ]
 }
+
+resource "aws_cloudfront_origin_request_policy" "custom_api_gateway_policy" {
+  name        = "Custom-API-Gateway-Policy"
+  comment     = "Custom policy to forward headers to API Gateway"
+
+  headers_config {
+    header_behavior = "whitelist"
+    headers = [
+      "Authorization",
+      "Origin",
+      "Access-Control-Request-Method",
+      "Access-Control-Request-Headers"
+    ]
+  }
+
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+
+  cookies_config {
+    cookie_behavior = "all"
+  }
+}

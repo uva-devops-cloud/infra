@@ -30,8 +30,8 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   }
 
   origin {
-    domain_name = "3q336xufi6.execute-api.eu-west-2.amazonaws.com"  
-    origin_path = "/dev"  
+    domain_name = "3q336xufi6.execute-api.eu-west-2.amazonaws.com"
+    origin_path = "/dev"
     origin_id   = "API-Gateway-Origin"
     
     custom_origin_config {
@@ -47,7 +47,6 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
   comment             = "StudentPortal Frontend CloudFront Distribution"
   default_root_object = "index.html"
 
-  # Use the cheapest price class (US, Canada, Europe)
   price_class = "PriceClass_100"
 
   default_cache_behavior {
@@ -73,6 +72,8 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     allowed_methods  = ["HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "API-Gateway-Origin"
+    cache_policy_id  = "658327ea-f89d-4fab-a63d-7e88639e58f6"  // CachingDisabled
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.custom_api_gateway_policy.id
 
     forwarded_values {
       query_string = true
@@ -88,7 +89,6 @@ resource "aws_cloudfront_distribution" "frontend_distribution" {
     max_ttl                = 0
   }
 
-  # Added error handling to redirect to correct page for SSO
   custom_error_response {
     error_code            = 403
     response_code         = 200
