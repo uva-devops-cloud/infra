@@ -73,7 +73,7 @@ variable "ok_actions" {
 variable "email_notifications" {
   description = "List of email addresses to subscribe to the SNS topic"
   type        = list(string)
-  default     = []
+  default     = ["merlijn.van.uden@student.uva.nl"]
 }
 
 variable "health_check_schedule" {

@@ -142,7 +142,7 @@ module "monitoring" {
 
   db_instance_id = module.database.db_instance_id
 
-  email_notifications = ["admin@example.com"] // Replace with your email
+  email_notifications = ["merlijn.van.uden@student.uva.nl"] // Replace with your email
 
   tags = local.common_tags
 }
