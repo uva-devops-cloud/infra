@@ -262,8 +262,6 @@ resource "aws_security_group_rule" "endpoint_from_lambda" {
 
 # Security group for Streamlit
 resource "aws_security_group" "streamlit_sg" {
-  count = var.create_streamlit_sg ? 1 : 0
-
   name        = "${var.prefix}-streamlit-sg"
   description = "Allow inbound access to Streamlit app"
   vpc_id      = aws_vpc.main.id

@@ -286,7 +286,7 @@ resource "aws_lambda_function" "delete_student" {
 
 # Orchestrator Lambda (No VPC for direct internet access to LLM APIs)
 resource "aws_lambda_function" "orchestrator" {
-  function_name = "student-query-orchestrator"
+  function_name = "${var.prefix}-orchestrator"
   role          = aws_iam_role.orchestrator_lambda_role.arn
 
   # Use a minimal dummy file
@@ -302,8 +302,8 @@ resource "aws_lambda_function" "orchestrator" {
 
   environment {
     variables = {
-      EVENT_BUS_NAME         = aws_cloudwatch_event_bus.main.name,
-      LLM_API_KEY_SECRET_ARN = aws_secretsmanager_secret.llm_api_key.arn
+      EVENT_BUS_NAME         = var.event_bus_name,
+      LLM_API_KEY_SECRET_ARN = var.create_llm_api_key_secret ? aws_secretsmanager_secret.llm_api_key[0].arn : var.llm_api_key_secret_arn
     }
   }
 

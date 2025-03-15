@@ -12,7 +12,6 @@ resource "aws_cloudwatch_event_bus" "main" {
 # ------------------------------------------------------------------------------
 
 resource "aws_vpc_endpoint" "eventbridge" {
-  count = var.create_vpc_endpoint ? 1 : 0
 
   vpc_id            = var.vpc_id
   service_name      = "com.amazonaws.${var.aws_region}.events"
@@ -35,7 +34,6 @@ resource "aws_vpc_endpoint" "eventbridge" {
 }
 
 resource "aws_security_group" "eventbridge_endpoint" {
-  count = var.create_vpc_endpoint ? 1 : 0
 
   name        = "${var.prefix}-${var.environment}-eventbridge-endpoint-sg"
   description = "Security group for EventBridge VPC endpoint"
@@ -109,7 +107,7 @@ resource "aws_cloudwatch_event_rule" "fetch_student_data" {
 
   # Update to match original pattern
   event_pattern = jsonencode({
-    source      = ["student.query.orchestrator"], # Original source
+    source      = ["student.query.orchestrator"],
     detail-type = ["FetchStudentData"]
   })
 

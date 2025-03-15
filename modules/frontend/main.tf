@@ -215,8 +215,8 @@ resource "aws_security_group" "streamlit_sg" {
 
 # IAM Role and Instance Profile for Streamlit
 resource "aws_iam_role" "streamlit_role" {
-  count = var.create_streamlit ? 1 : 0
-  name  = "${var.prefix}-${var.environment}-streamlit-role"
+
+  name = "${var.prefix}-${var.environment}-streamlit-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -235,21 +235,20 @@ resource "aws_iam_role" "streamlit_role" {
 }
 
 resource "aws_iam_instance_profile" "streamlit_profile" {
-  count = var.create_streamlit ? 1 : 0
-  name  = "${var.prefix}-${var.environment}-streamlit-profile"
-  role  = aws_iam_role.streamlit_role[0].name
+
+  name = "${var.prefix}-${var.environment}-streamlit-profile"
+  role = aws_iam_role.streamlit_role.name
 }
 
 # EC2 instance for Streamlit
 resource "aws_instance" "streamlit" {
-  count = var.create_streamlit ? 1 : 0
 
   ami                    = var.streamlit_ami_id
   instance_type          = var.streamlit_instance_type
   subnet_id              = var.public_subnet_id
-  vpc_security_group_ids = [aws_security_group.streamlit_sg[0].id]
-  iam_instance_profile   = aws_iam_instance_profile.streamlit_profile[0].name
-  key_name               = aws_key_pair.streamlit_key[0].key_name
+  vpc_security_group_ids = [aws_security_group.streamlit_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.streamlit_profile.name
+  key_name               = aws_key_pair.streamlit_key.key_name
 
   tags = merge(
     var.tags,

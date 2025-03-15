@@ -66,6 +66,9 @@ module "compute" {
   db_host        = module.database.db_address
   db_port        = module.database.db_port
 
+  event_bus_name = module.events.event_bus_name
+  event_bus_arn  = module.events.event_bus_arn
+
   tags = local.common_tags
 }
 

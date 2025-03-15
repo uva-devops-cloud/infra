@@ -22,6 +22,6 @@ output "frontend_url" {
 }
 
 output "streamlit_url" {
-  value       = "http://${aws_instance.streamlit.public_ip}:8501"
+  value       = module.frontend.streamlit_url
   description = "URL to access the Streamlit app (after manual configuration)"
 }

@@ -74,7 +74,6 @@ resource "aws_cognito_user_pool" "main" {
 # ------------------------------------------------------------------------------
 
 resource "aws_cognito_identity_provider" "google" {
-  count = var.enable_google_auth ? 1 : 0
 
   user_pool_id  = aws_cognito_user_pool.main.id
   provider_name = "Google"
@@ -145,7 +144,6 @@ resource "aws_cognito_user_pool_domain" "main" {
 # ------------------------------------------------------------------------------
 
 resource "aws_apigatewayv2_authorizer" "cognito" {
-  count = var.api_id != null ? 1 : 0
 
   api_id           = var.api_id
   authorizer_type  = "JWT"
@@ -163,7 +161,6 @@ resource "aws_apigatewayv2_authorizer" "cognito" {
 # ------------------------------------------------------------------------------
 
 resource "aws_cognito_identity_pool" "main" {
-  count = var.create_identity_pool ? 1 : 0
 
   identity_pool_name               = "${var.prefix}-identity-pool"
   allow_unauthenticated_identities = false
@@ -183,7 +180,6 @@ resource "aws_cognito_identity_pool" "main" {
 # ------------------------------------------------------------------------------
 
 resource "aws_iam_role" "authenticated" {
-  count = var.create_identity_pool ? 1 : 0
 
   name = "${var.prefix}-cognito-authenticated-role"
 
@@ -212,7 +208,6 @@ resource "aws_iam_role" "authenticated" {
 }
 
 resource "aws_iam_policy" "authenticated_policy" {
-  count = var.create_identity_pool ? 1 : 0
 
   name        = "${var.prefix}-cognito-authenticated-policy"
   description = "Policy for Cognito authenticated users"
@@ -233,10 +228,9 @@ resource "aws_iam_policy" "authenticated_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "authenticated_attach" {
-  count = var.create_identity_pool ? 1 : 0
 
-  role       = aws_iam_role.authenticated[0].name
-  policy_arn = aws_iam_policy.authenticated_policy[0].arn
+  role       = aws_iam_role.authenticated.name
+  policy_arn = aws_iam_policy.authenticated_policy.arn
 }
 
 # ------------------------------------------------------------------------------
@@ -244,11 +238,10 @@ resource "aws_iam_role_policy_attachment" "authenticated_attach" {
 # ------------------------------------------------------------------------------
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
-  count = var.create_identity_pool ? 1 : 0
 
-  identity_pool_id = aws_cognito_identity_pool.main[0].id
+  identity_pool_id = aws_cognito_identity_pool.main.id
 
   roles = {
-    "authenticated" = aws_iam_role.authenticated[0].arn
+    "authenticated" = aws_iam_role.authenticated.arn
   }
 }

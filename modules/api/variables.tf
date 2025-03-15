@@ -54,6 +54,18 @@ variable "lambda_functions" {
       arn        = string
       invoke_arn = string
       version    = string
+    }),
+    orchestrator = object({
+      name       = string
+      arn        = string
+      invoke_arn = string
+      version    = string
+    }),
+    update_profile = object({
+      name       = string
+      arn        = string
+      invoke_arn = string
+      version    = string
     })
   })
 }

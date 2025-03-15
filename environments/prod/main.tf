@@ -76,10 +76,10 @@ module "compute" {
   private_subnet_ids       = [module.networking.private_subnet_id, module.database.private_subnet_b_id]
   lambda_security_group_id = module.networking.lambda_security_group_id
   lambda_code_bucket       = aws_s3_bucket.lambda_code.bucket
-  lambda_code_key_prefix   = "lambda-code"
+  lambda_code_key_prefix   = "lambda-code/prod"
 
   # Production-specific settings
-  lambda_memory_size = 512
+  lambda_memory_size = 256
   lambda_timeout     = 60
 
   # Database connection info
@@ -88,6 +88,38 @@ module "compute" {
   db_name        = module.database.db_name
   db_host        = module.database.db_address
   db_port        = module.database.db_port
+
+  # Event bus details
+  event_bus_name = module.events.event_bus_name
+  event_bus_arn  = module.events.event_bus_arn
+  tags           = local.common_tags
+}
+
+# Events Module
+module "events" {
+  source = "../../modules/events"
+
+  prefix      = var.prefix
+  environment = "prod"
+  aws_region  = var.aws_region
+
+  # Lambda function ARNs
+  orchestrator_lambda_arn  = module.compute.orchestrator_lambda_arn
+  orchestrator_lambda_name = module.compute.orchestrator_lambda_name
+
+  # Add other Lambda ARNs as needed
+  student_data_lambda_arn     = module.compute.student_data_lambda_arn
+  student_data_lambda_name    = module.compute.student_data_lambda_name
+  student_courses_lambda_arn  = module.compute.student_courses_lambda_arn
+  student_courses_lambda_name = module.compute.student_courses_lambda_name
+  update_profile_lambda_arn   = module.compute.update_profile_lambda_arn
+  update_profile_lambda_name  = module.compute.update_profile_lambda_name
+
+  # VPC configuration
+  create_vpc_endpoint = true
+  vpc_id              = module.networking.vpc_id
+  vpc_cidr            = var.vpc_cidr
+  private_subnet_ids  = [module.networking.private_subnet_id]
 
   tags = local.common_tags
 }
@@ -106,7 +138,35 @@ module "api" {
   log_retention_days = 90 # Longer retention for production logs
 
   tags = local.common_tags
+
+  jwt_authorizer_id = module.identity.jwt_authorizer_id
+
 }
+
+# Add to environments/prod/main.tf after the events module
+module "migrations" {
+  source = "../../modules/migrations"
+
+  prefix      = var.prefix
+  environment = "prod"
+
+  lambda_code_bucket     = aws_s3_bucket.lambda_code.bucket
+  lambda_code_key_prefix = "lambda-code/prod"
+
+  db_secret_arn = module.database.db_secret_arn
+  db_name       = module.database.db_name
+
+  vpc_config = {
+    subnet_ids         = [module.networking.private_subnet_id]
+    security_group_ids = [module.networking.lambda_security_group_id]
+  }
+
+  api_execution_arn = module.api.api_execution_arn
+
+  tags = local.common_tags
+}
+
+
 
 # Identity Module (Cognito)
 module "identity" {
