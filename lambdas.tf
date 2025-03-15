@@ -116,7 +116,7 @@ resource "aws_lambda_function" "update_profile" {
   tags = local.common_tags
 }
 
-resource "aws_lambda_function" "hello_world_lambda" {
+resource "aws_lambda_function" "hello_world" {
   function_name = "hello_world"
   role          = aws_iam_role.worker_lambda_role.arn
   filename      = "${path.module}/dummy_lambda.zip" # This will be replaced by your actual deployment
