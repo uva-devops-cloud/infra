@@ -44,26 +44,23 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        run: terraform init -backend-config=backend-${{inputs.environment}}.config
-        working-directory: .
+        # Change to use config directory for backend config
+        run: terraform init -backend-config=../../config/backend-${{inputs.environment}}.config
+        working-directory: ./environments/${{inputs.environment}}
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: .
-
-        # tfp
+        working-directory: ./environments/${{inputs.environment}}
 
       - name: Terraform Plan
         run: |
           terraform plan \
+            -var-file=${{inputs.environment}}.tfvars \
             -var="google_client_secret=${{ secrets.google_client_secret }}" \
-            -var="environment=${{ inputs.environment }}" \
             -var="ssh_public_key=${{ secrets.ssh_public_key }}" \
             -out=tfplan
-        working-directory: .
+        working-directory: ./environments/${{inputs.environment}}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-        working-directory: .
-
-        # terraform destroy
+        working-directory: ./environments/${{inputs.environment}}
