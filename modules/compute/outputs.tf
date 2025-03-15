@@ -40,6 +40,18 @@ output "lambda_functions" {
       arn        = aws_lambda_function.delete_student.arn
       invoke_arn = aws_lambda_function.delete_student.invoke_arn
       version    = aws_lambda_function.delete_student.version
+    },
+    orchestrator = {
+      name       = aws_lambda_function.orchestrator.function_name
+      arn        = aws_lambda_function.orchestrator.arn
+      invoke_arn = aws_lambda_function.orchestrator.invoke_arn
+      version    = aws_lambda_function.orchestrator.version
+    },
+    update_profile = {
+      name       = aws_lambda_function.update_profile.function_name
+      arn        = aws_lambda_function.update_profile.arn
+      invoke_arn = aws_lambda_function.update_profile.invoke_arn
+      version    = aws_lambda_function.update_profile.version
     }
   }
 }
