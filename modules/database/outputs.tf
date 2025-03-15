@@ -43,3 +43,8 @@ output "private_subnet_b_id" {
   description = "ID of the second private subnet created for the database"
   value       = aws_subnet.private_b.id
 }
+
+output "db_instance_id" {
+  description = "ID of the RDS instance"
+  value       = module.rds.db_instance_id
+}

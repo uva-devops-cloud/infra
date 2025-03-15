@@ -135,12 +135,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   # Add aliases if custom domain provided
-  dynamic "aliases" {
-    for_each = length(var.domain_names) > 0 ? [1] : []
-    content {
-      names = var.domain_names
-    }
-  }
+  aliases = var.domain_names
 
   tags = var.tags
 }
@@ -168,7 +163,6 @@ resource "aws_route53_record" "frontend" {
 # ------------------------------------------------------------------------------
 
 resource "aws_key_pair" "streamlit_key" {
-  count      = var.create_streamlit ? 1 : 0
   key_name   = "${var.prefix}-${var.environment}-streamlit-key"
   public_key = var.ssh_public_key
 
@@ -176,7 +170,6 @@ resource "aws_key_pair" "streamlit_key" {
 }
 
 resource "aws_security_group" "streamlit_sg" {
-  count       = var.create_streamlit ? 1 : 0
   name        = "${var.prefix}-${var.environment}-streamlit-sg"
   description = "Allow inbound access to Streamlit app"
   vpc_id      = var.vpc_id

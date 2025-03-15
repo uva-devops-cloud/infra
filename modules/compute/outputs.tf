@@ -97,5 +97,5 @@ output "update_profile_lambda_name" {
 
 output "llm_api_key_secret_arn" {
   description = "ARN of the LLM API key secret (if created)"
-  value       = var.create_llm_api_key_secret ? aws_secretsmanager_secret.llm_api_key[0].arn : var.llm_api_key_secret_arn
+  value       = aws_secretsmanager_secret.llm_api_key.arn
 }

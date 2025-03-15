@@ -20,7 +20,7 @@ resource "aws_vpc_endpoint" "eventbridge" {
   subnet_ids = var.private_subnet_ids
 
   security_group_ids = [
-    aws_security_group.eventbridge_endpoint[0].id
+    aws_security_group.eventbridge_endpoint.id
   ]
 
   private_dns_enabled = true
@@ -80,7 +80,6 @@ resource "aws_cloudwatch_event_rule" "student_query" {
 }
 
 resource "aws_cloudwatch_event_target" "orchestrator" {
-  count          = var.orchestrator_lambda_arn != null ? 1 : 0
   rule           = aws_cloudwatch_event_rule.student_query.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   target_id      = "OrchestratorTarget"
@@ -88,7 +87,6 @@ resource "aws_cloudwatch_event_target" "orchestrator" {
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_orchestrator" {
-  count         = var.orchestrator_lambda_arn != null && var.orchestrator_lambda_name != null ? 1 : 0
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = var.orchestrator_lambda_name
@@ -115,7 +113,6 @@ resource "aws_cloudwatch_event_rule" "fetch_student_data" {
 }
 
 resource "aws_cloudwatch_event_target" "fetch_student_data" {
-  count          = var.student_data_lambda_arn != null ? 1 : 0
   rule           = aws_cloudwatch_event_rule.fetch_student_data.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   target_id      = "FetchStudentDataTarget"
@@ -123,7 +120,6 @@ resource "aws_cloudwatch_event_target" "fetch_student_data" {
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_student_data" {
-  count         = var.student_data_lambda_arn != null && var.student_data_lambda_name != null ? 1 : 0
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = var.student_data_lambda_name
@@ -150,7 +146,6 @@ resource "aws_cloudwatch_event_rule" "fetch_student_courses" {
 }
 
 resource "aws_cloudwatch_event_target" "fetch_student_courses" {
-  count          = var.student_courses_lambda_arn != null ? 1 : 0
   rule           = aws_cloudwatch_event_rule.fetch_student_courses.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   target_id      = "FetchStudentCoursesTarget"
@@ -158,7 +153,6 @@ resource "aws_cloudwatch_event_target" "fetch_student_courses" {
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_student_courses" {
-  count         = var.student_courses_lambda_arn != null && var.student_courses_lambda_name != null ? 1 : 0
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = var.student_courses_lambda_name
@@ -184,7 +178,6 @@ resource "aws_cloudwatch_event_rule" "update_profile" {
 }
 
 resource "aws_cloudwatch_event_target" "update_profile" {
-  count          = var.update_profile_lambda_arn != null ? 1 : 0
   rule           = aws_cloudwatch_event_rule.update_profile.name
   event_bus_name = aws_cloudwatch_event_bus.main.name
   target_id      = "UpdateProfileTarget"
@@ -192,7 +185,6 @@ resource "aws_cloudwatch_event_target" "update_profile" {
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_update_profile" {
-  count         = var.update_profile_lambda_arn != null && var.update_profile_lambda_name != null ? 1 : 0
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = var.update_profile_lambda_name

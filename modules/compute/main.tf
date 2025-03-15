@@ -134,6 +134,24 @@ resource "aws_iam_role_policy_attachment" "orchestrator_secrets" {
   policy_arn = aws_iam_policy.orchestrator_secrets_policy.arn
 }
 
+# Add before the orchestrator Lambda
+resource "aws_secretsmanager_secret" "llm_api_key" {
+  name        = "${var.prefix}-llm-api-key"
+  description = "API key for LLM service"
+
+  tags = var.tags
+}
+
+resource "aws_secretsmanager_secret_version" "llm_api_key" {
+  secret_id     = aws_secretsmanager_secret.llm_api_key.id
+  secret_string = var.llm_api_key
+}
+
+resource "aws_iam_role_policy_attachment" "orchestrator_policy_attachment" {
+  role       = aws_iam_role.orchestrator_lambda_role.name
+  policy_arn = aws_iam_policy.orchestrator_eventbridge_policy.arn
+}
+
 # ------------------------------------------------------------------------------
 # Lambda Functions
 # ------------------------------------------------------------------------------
@@ -303,7 +321,7 @@ resource "aws_lambda_function" "orchestrator" {
   environment {
     variables = {
       EVENT_BUS_NAME         = var.event_bus_name,
-      LLM_API_KEY_SECRET_ARN = var.create_llm_api_key_secret ? aws_secretsmanager_secret.llm_api_key[0].arn : var.llm_api_key_secret_arn
+      LLM_API_KEY_SECRET_ARN = aws_secretsmanager_secret.llm_api_key.arn
     }
   }
 

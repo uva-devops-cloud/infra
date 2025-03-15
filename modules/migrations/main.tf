@@ -74,7 +74,6 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 
 # VPC access policy (if Lambda needs VPC access)
 resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
-  count      = var.vpc_config != null ? 1 : 0
   role       = aws_iam_role.migrations_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
@@ -187,7 +186,6 @@ resource "aws_cloudwatch_log_group" "db_migration" {
 # ------------------------------------------------------------------------------
 
 resource "aws_lambda_permission" "allow_bucket" {
-  count         = var.enable_s3_trigger ? 1 : 0
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.db_migration.function_name
@@ -196,7 +194,6 @@ resource "aws_lambda_permission" "allow_bucket" {
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
-  count  = var.enable_s3_trigger ? 1 : 0
   bucket = aws_s3_bucket.migrations.id
 
   lambda_function {

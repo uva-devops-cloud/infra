@@ -148,7 +148,6 @@ resource "aws_cloudwatch_metric_alarm" "api_error_rate" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
-  count = length(var.lambda_function_names) > 0 ? 1 : 0
 
   alarm_name          = "${var.prefix}-${var.environment}-lambda-error-rate-alarm"
   comparison_operator = "GreaterThanThreshold"
@@ -171,7 +170,6 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_rate" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds_cpu_utilization" {
-  count = var.db_instance_id != "" ? 1 : 0
 
   alarm_name          = "${var.prefix}-${var.environment}-rds-cpu-alarm"
   comparison_operator = "GreaterThanThreshold"
@@ -198,7 +196,6 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu_utilization" {
 # ------------------------------------------------------------------------------
 
 resource "aws_sns_topic" "alerts" {
-  count = var.create_sns_topic ? 1 : 0
 
   name = "${var.prefix}-${var.environment}-alerts-topic"
 
@@ -218,7 +215,6 @@ resource "aws_sns_topic_subscription" "email" {
 # ------------------------------------------------------------------------------
 
 resource "aws_cloudwatch_event_rule" "health_check" {
-  count = var.create_health_check_rule ? 1 : 0
 
   name                = "${var.prefix}-${var.environment}-health-check"
   description         = "Scheduled health check for the application"
@@ -228,18 +224,16 @@ resource "aws_cloudwatch_event_rule" "health_check" {
 }
 
 resource "aws_cloudwatch_event_target" "health_check_lambda" {
-  count = var.create_health_check_rule && var.health_check_lambda_arn != null ? 1 : 0
 
-  rule = aws_cloudwatch_event_rule.health_check[0].name
+  rule = aws_cloudwatch_event_rule.health_check.name
   arn  = var.health_check_lambda_arn
 }
 
 resource "aws_lambda_permission" "allow_eventbridge" {
-  count = var.create_health_check_rule && var.health_check_lambda_arn != null ? 1 : 0
 
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
   function_name = var.health_check_lambda_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.health_check[0].arn
+  source_arn    = aws_cloudwatch_event_rule.health_check.arn
 }

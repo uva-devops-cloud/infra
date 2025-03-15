@@ -40,5 +40,5 @@ output "vpc_endpoint_dns" {
 
 output "eventbridge_security_group_id" {
   description = "ID of the EventBridge VPC endpoint security group (if created)"
-  value       = var.create_vpc_endpoint ? aws_security_group.eventbridge_endpoint[0].id : null
+  value       = var.create_vpc_endpoint ? aws_security_group.eventbridge_endpoint.id : null
 }

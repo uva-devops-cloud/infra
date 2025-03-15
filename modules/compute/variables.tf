@@ -101,12 +101,6 @@ variable "llm_api_key_secret_arn" {
   default     = null
 }
 
-variable "create_llm_api_key_secret" {
-  description = "Whether to create a secret for LLM API key"
-  type        = bool
-  default     = false
-}
-
 variable "llm_api_key" {
   description = "LLM API key (if creating a secret)"
   type        = string

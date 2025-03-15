@@ -244,7 +244,7 @@ resource "aws_lambda_permission" "api_gateway_delete_student" {
 resource "aws_lambda_permission" "orchestrator_api" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_functions.orchestrator.function_name
+  function_name = var.lambda_functions.orchestrator.name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.student_api.execution_arn}/*/*/query"
 }
@@ -252,7 +252,7 @@ resource "aws_lambda_permission" "orchestrator_api" {
 resource "aws_lambda_permission" "update_profile_api" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_functions.update_profile.function_name
+  function_name = var.lambda_functions.update_profile.name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.student_api.execution_arn}/*/*/profile/*"
 }
