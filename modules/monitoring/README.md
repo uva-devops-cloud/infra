@@ -42,10 +42,6 @@ module "monitoring" {
   email_notifications  = ["admin@example.com"]
 
   # Health check (optional)
-  create_health_check_rule = true
-  health_check_schedule    = "rate(5 minutes)" # default
-  health_check_lambda_arn  = module.health_check.lambda_arn # if you have a health check Lambda
-  health_check_lambda_name = module.health_check.lambda_name
 
   tags = {
     Project     = "StudentPortal"

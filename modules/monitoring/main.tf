@@ -208,31 +208,3 @@ resource "aws_sns_topic_subscription" "email" {
   protocol  = "email"
   endpoint  = var.email_notifications[0]
 }
-
-# ------------------------------------------------------------------------------
-# EventBridge Rule for Scheduled Health Checks (Optional)
-# ------------------------------------------------------------------------------
-
-resource "aws_cloudwatch_event_rule" "health_check" {
-
-  name                = "${var.prefix}-${var.environment}-health-check"
-  description         = "Scheduled health check for the application"
-  schedule_expression = var.health_check_schedule
-
-  tags = var.tags
-}
-
-resource "aws_cloudwatch_event_target" "health_check_lambda" {
-
-  rule = aws_cloudwatch_event_rule.health_check.name
-  arn  = var.health_check_lambda_arn
-}
-
-resource "aws_lambda_permission" "allow_eventbridge" {
-
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
-  function_name = var.health_check_lambda_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.health_check.arn
-}

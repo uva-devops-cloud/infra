@@ -31,10 +31,3 @@ output "sns_topic_arn" {
   value       = aws_sns_topic.alerts.arn
 }
 
-output "health_check_rule" {
-  description = "Details of the health check EventBridge rule (if created)"
-  value = {
-    name = aws_cloudwatch_event_rule.health_check.name
-    arn  = aws_cloudwatch_event_rule.health_check.arn
-  }
-}

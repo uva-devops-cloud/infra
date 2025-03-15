@@ -144,9 +144,6 @@ module "monitoring" {
 
   email_notifications = ["merlijn.van.uden@student.uva.nl"] // Replace with your email
 
-  health_check_lambda_arn  = module.compute.health_check_lambda_arn
-  health_check_lambda_name = module.compute.health_check_lambda_name
-
 
   tags = local.common_tags
 }

@@ -75,21 +75,3 @@ variable "email_notifications" {
   type        = list(string)
   default     = ["merlijn.van.uden@student.uva.nl"]
 }
-
-variable "health_check_schedule" {
-  description = "Schedule expression for the health check"
-  type        = string
-  default     = "rate(5 minutes)"
-}
-
-variable "health_check_lambda_arn" {
-  description = "ARN of the Lambda function to trigger for health checks"
-  type        = string
-  default     = null
-}
-
-variable "health_check_lambda_name" {
-  description = "Name of the Lambda function to trigger for health checks"
-  type        = string
-  default     = null
-}
