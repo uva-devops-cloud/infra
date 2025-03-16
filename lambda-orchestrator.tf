@@ -23,7 +23,8 @@ resource "aws_lambda_function" "query_intake" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    aws_lambda_function.llm_query_analyzer
   ]
 
   tags = local.common_tags
@@ -39,7 +40,7 @@ resource "aws_lambda_function" "llm_query_analyzer" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 60  # Increased for LLM API calls
+  timeout     = 60 # Increased for LLM API calls
   memory_size = 256
 
   # Remove vpc_config to place outside VPC for LLM API access
@@ -47,13 +48,15 @@ resource "aws_lambda_function" "llm_query_analyzer" {
   environment {
     variables = {
       WORKER_DISPATCHER_FUNCTION = aws_lambda_function.worker_dispatcher.function_name,
-      LLM_ENDPOINT              = var.llm_endpoint,
-      LLM_API_KEY_SECRET_ARN    = aws_secretsmanager_secret.llm_api_key.arn
+      LLM_ENDPOINT               = var.llm_endpoint,
+      LLM_API_KEY_SECRET_ARN     = aws_secretsmanager_secret.llm_api_key.arn
     }
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    aws_lambda_function.worker_dispatcher,
+    aws_secretsmanager_secret.llm_api_key
   ]
 
   tags = local.common_tags
@@ -76,13 +79,15 @@ resource "aws_lambda_function" "worker_dispatcher" {
 
   environment {
     variables = {
-      EVENT_BUS_NAME     = aws_cloudwatch_event_bus.main.name,
+      EVENT_BUS_NAME      = aws_cloudwatch_event_bus.main.name,
       REQUESTS_TABLE_NAME = aws_dynamodb_table.student_query_requests.name
     }
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    aws_cloudwatch_event_bus.main,
+    aws_dynamodb_table.student_query_requests
   ]
 
   tags = local.common_tags
@@ -105,13 +110,15 @@ resource "aws_lambda_function" "response_aggregator" {
 
   environment {
     variables = {
-      REQUESTS_TABLE_NAME        = aws_dynamodb_table.student_query_requests.name,
+      REQUESTS_TABLE_NAME       = aws_dynamodb_table.student_query_requests.name,
       ANSWER_GENERATOR_FUNCTION = aws_lambda_function.answer_generator.function_name
     }
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    aws_dynamodb_table.student_query_requests,
+    aws_lambda_function.answer_generator
   ]
 
   tags = local.common_tags
@@ -127,7 +134,7 @@ resource "aws_lambda_function" "answer_generator" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 60  # Increased for LLM API calls
+  timeout     = 60 # Increased for LLM API calls
   memory_size = 256
 
   # Remove vpc_config to place outside VPC for LLM API access
@@ -143,7 +150,11 @@ resource "aws_lambda_function" "answer_generator" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    aws_secretsmanager_secret.llm_api_key,
+    aws_dynamodb_table.student_query_requests,
+    aws_dynamodb_table.student_query_responses,
+    aws_apigatewayv2_stage.websocket_stage
   ]
 
   tags = local.common_tags
@@ -164,6 +175,11 @@ resource "aws_lambda_function" "websocket_connect" {
       CONNECTIONS_TABLE_NAME = aws_dynamodb_table.websocket_connections.name
     }
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    aws_dynamodb_table.websocket_connections
+  ]
 
   tags = local.common_tags
 }
