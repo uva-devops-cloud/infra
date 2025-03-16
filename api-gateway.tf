@@ -119,6 +119,6 @@ resource "aws_api_gateway_integration_response" "existing_integration_responses"
   status_code = each.value.status_code
 
   response_parameters = {
-  "method.response.header.Access-Control-Allow-Origin" = "'https://${aws_cloudfront_distribution.frontend_distribution.domain_name}
+    "method.response.header.Access-Control-Allow-Origin" = "'https://${aws_cloudfront_distribution.frontend_distribution.domain_name}'"
   }
 }
