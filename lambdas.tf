@@ -128,18 +128,6 @@ resource "aws_lambda_function" "hello_world" {
   tags = local.common_tags
 }
 
-resource "aws_lambda_function" "hello_world" {
-  function_name = "hello_world"
-  role          = aws_iam_role.worker_lambda_role.arn
-  filename      = "${path.module}/dummy_lambda.zip" # This will be replaced by your actual deployment
-  handler       = "index.handler"
-  runtime       = "nodejs18.x"
-  timeout       = 10
-  memory_size   = 128
-
-  tags = local.common_tags
-}
-
 # Lambda function for getting program_details
 resource "aws_lambda_function" "get_program_details" {
   function_name = "get-program-details"
