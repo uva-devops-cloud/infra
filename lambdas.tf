@@ -25,9 +25,6 @@ resource "aws_s3_bucket_public_access_block" "lambda_deployments_public_access" 
   restrict_public_buckets = true
 }
 
-# Get the current AWS account ID
-data "aws_caller_identity" "current" {}
-
 # Orchestrator Lambda (No VPC for direct internet access to LLM APIs)
 resource "aws_lambda_function" "orchestrator" {
   function_name = "student-query-orchestrator"
