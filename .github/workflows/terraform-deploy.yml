@@ -44,8 +44,11 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        # Change to use config directory for backend config
-        run: terraform init -backend-config=../../config/backend-${{inputs.environment}}.config
+        run: terraform init
+        working-directory: ./environments/${{inputs.environment}}
+
+      - name: Terraform Format
+        run: terraform fmt -check
         working-directory: ./environments/${{inputs.environment}}
 
       - name: Terraform Validate
@@ -61,6 +64,6 @@ jobs:
             -out=tfplan
         working-directory: ./environments/${{inputs.environment}}
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
-        working-directory: ./environments/${{inputs.environment}}
+      # - name: Terraform Apply
+      #   run: terraform apply -auto-approve tfplan
+      #   working-directory: ./environments/${{inputs.environment}}
