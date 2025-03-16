@@ -28,95 +28,27 @@ resource "aws_cloudwatch_event_target" "worker_response_target" {
   ]
 }
 
-# WebSocket API for real-time updates
-resource "aws_apigatewayv2_api" "websocket_api" {
-  name                       = "student-query-websocket-api"
-  protocol_type              = "WEBSOCKET"
-  route_selection_expression = "$request.body.action"
-
-  tags = local.common_tags
+# Add the query API route to the existing REST API Gateway
+resource "aws_api_gateway_resource" "query_resource" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  path_part   = "query"
 }
 
-# Production stage for WebSocket API
-resource "aws_apigatewayv2_stage" "websocket_stage" {
-  api_id      = aws_apigatewayv2_api.websocket_api.id
-  name        = "prod"
-  auto_deploy = true
-
-  tags = local.common_tags
+# HTTP method for the query endpoint
+resource "aws_api_gateway_method" "query_method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.query_resource.id
+  http_method   = "POST"
+  authorization = "NONE"  # Change to "COGNITO_USER_POOLS" if using auth
 }
 
-# Connect route for WebSocket API
-resource "aws_apigatewayv2_route" "connect_route" {
-  api_id    = aws_apigatewayv2_api.websocket_api.id
-  route_key = "$connect"
-  target    = "integrations/${aws_apigatewayv2_integration.connect_integration.id}"
-}
-
-# Integration for WebSocket connect route
-resource "aws_apigatewayv2_integration" "connect_integration" {
-  api_id           = aws_apigatewayv2_api.websocket_api.id
-  integration_type = "AWS_PROXY"
-  
-  integration_uri = aws_lambda_function.websocket_connect.arn
-}
-
-# Disconnect route for WebSocket API
-resource "aws_apigatewayv2_route" "disconnect_route" {
-  api_id    = aws_apigatewayv2_api.websocket_api.id
-  route_key = "$disconnect"
-  target    = "integrations/${aws_apigatewayv2_integration.disconnect_integration.id}"
-}
-
-# Integration for WebSocket disconnect route
-resource "aws_apigatewayv2_integration" "disconnect_integration" {
-  api_id           = aws_apigatewayv2_api.websocket_api.id
-  integration_type = "AWS_PROXY"
-  
-  integration_uri = aws_lambda_function.websocket_disconnect.arn
-}
-
-# Lambda function for handling WebSocket disconnects
-resource "aws_lambda_function" "websocket_disconnect" {
-  function_name = "websocket-disconnect-handler"
-  role          = aws_iam_role.orchestrator_lambda_role.arn
-  filename      = "${path.module}/dummy_lambda.zip"
-  handler       = "index.handler"
-  runtime       = "nodejs18.x"
-  timeout       = 10
-  memory_size   = 128
-
-  environment {
-    variables = {
-      CONNECTIONS_TABLE_NAME = aws_dynamodb_table.websocket_connections.name
-    }
-  }
-
-  tags = local.common_tags
-}
-
-# Lambda permission for API Gateway to invoke WebSocket Disconnect Lambda
-resource "aws_lambda_permission" "websocket_disconnect" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.websocket_disconnect.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.websocket_api.execution_arn}/*/$disconnect"
-}
-
-# Add the query API route to the existing API Gateway
-resource "aws_apigatewayv2_route" "query_route" {
-  api_id    = aws_apigatewayv2_api.student_api.id
-  route_key = "POST /query"
-  target    = "integrations/${aws_apigatewayv2_integration.query_integration.id}"
-}
-
-# Integration for query route
-resource "aws_apigatewayv2_integration" "query_integration" {
-  api_id             = aws_apigatewayv2_api.student_api.id
-  integration_type   = "AWS_PROXY"
-  integration_uri    = aws_lambda_function.query_intake.arn
-  integration_method = "POST"
-  
-  payload_format_version = "2.0"
+# Integration for query endpoint with Lambda
+resource "aws_api_gateway_integration" "query_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.query_resource.id
+  http_method             = aws_api_gateway_method.query_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.query_intake.invoke_arn
 }

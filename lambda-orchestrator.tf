@@ -23,8 +23,7 @@ resource "aws_lambda_function" "query_intake" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
-    aws_lambda_function.llm_query_analyzer
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment
   ]
 
   tags = local.common_tags
@@ -40,7 +39,7 @@ resource "aws_lambda_function" "llm_query_analyzer" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 60 # Increased for LLM API calls
+  timeout     = 60  # Increased for LLM API calls
   memory_size = 256
 
   # Remove vpc_config to place outside VPC for LLM API access
@@ -48,15 +47,13 @@ resource "aws_lambda_function" "llm_query_analyzer" {
   environment {
     variables = {
       WORKER_DISPATCHER_FUNCTION = aws_lambda_function.worker_dispatcher.function_name,
-      LLM_ENDPOINT               = var.llm_endpoint,
-      LLM_API_KEY_SECRET_ARN     = aws_secretsmanager_secret.llm_api_key.arn
+      LLM_ENDPOINT              = var.llm_endpoint,
+      LLM_API_KEY_SECRET_ARN    = aws_secretsmanager_secret.llm_api_key.arn
     }
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
-    aws_lambda_function.worker_dispatcher,
-    aws_secretsmanager_secret.llm_api_key
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment
   ]
 
   tags = local.common_tags
@@ -79,15 +76,13 @@ resource "aws_lambda_function" "worker_dispatcher" {
 
   environment {
     variables = {
-      EVENT_BUS_NAME      = aws_cloudwatch_event_bus.main.name,
+      EVENT_BUS_NAME     = aws_cloudwatch_event_bus.main.name,
       REQUESTS_TABLE_NAME = aws_dynamodb_table.student_query_requests.name
     }
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
-    aws_cloudwatch_event_bus.main,
-    aws_dynamodb_table.student_query_requests
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment
   ]
 
   tags = local.common_tags
@@ -110,15 +105,13 @@ resource "aws_lambda_function" "response_aggregator" {
 
   environment {
     variables = {
-      REQUESTS_TABLE_NAME       = aws_dynamodb_table.student_query_requests.name,
+      REQUESTS_TABLE_NAME        = aws_dynamodb_table.student_query_requests.name,
       ANSWER_GENERATOR_FUNCTION = aws_lambda_function.answer_generator.function_name
     }
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
-    aws_dynamodb_table.student_query_requests,
-    aws_lambda_function.answer_generator
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment
   ]
 
   tags = local.common_tags
@@ -134,7 +127,7 @@ resource "aws_lambda_function" "answer_generator" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 60 # Increased for LLM API calls
+  timeout     = 60  # Increased for LLM API calls
   memory_size = 256
 
   # Remove vpc_config to place outside VPC for LLM API access
@@ -144,41 +137,12 @@ resource "aws_lambda_function" "answer_generator" {
       LLM_ENDPOINT           = var.llm_endpoint,
       LLM_API_KEY_SECRET_ARN = aws_secretsmanager_secret.llm_api_key.arn,
       REQUESTS_TABLE_NAME    = aws_dynamodb_table.student_query_requests.name,
-      RESPONSES_TABLE_NAME   = aws_dynamodb_table.student_query_responses.name,
-      WEBSOCKET_API_ENDPOINT = aws_apigatewayv2_stage.websocket_stage.invoke_url
+      RESPONSES_TABLE_NAME   = aws_dynamodb_table.student_query_responses.name
     }
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
-    aws_secretsmanager_secret.llm_api_key,
-    aws_dynamodb_table.student_query_requests,
-    aws_dynamodb_table.student_query_responses,
-    aws_apigatewayv2_stage.websocket_stage
-  ]
-
-  tags = local.common_tags
-}
-
-# WebSocket Connect Lambda (No VPC - triggered by API Gateway)
-resource "aws_lambda_function" "websocket_connect" {
-  function_name = "websocket-connect-handler"
-  role          = aws_iam_role.orchestrator_lambda_role.arn
-  filename      = "${path.module}/dummy_lambda.zip"
-  handler       = "index.handler"
-  runtime       = "nodejs18.x"
-  timeout       = 10
-  memory_size   = 128
-
-  environment {
-    variables = {
-      CONNECTIONS_TABLE_NAME = aws_dynamodb_table.websocket_connections.name
-    }
-  }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
-    aws_dynamodb_table.websocket_connections
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment
   ]
 
   tags = local.common_tags
@@ -190,7 +154,7 @@ resource "aws_lambda_permission" "api_gateway_query_intake" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.query_intake.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.student_api.execution_arn}/*/*/query"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/query"
 }
 
 # Lambda permission for EventBridge to invoke Response Aggregator Lambda
@@ -200,13 +164,4 @@ resource "aws_lambda_permission" "eventbridge_response_aggregator" {
   function_name = aws_lambda_function.response_aggregator.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.worker_response_rule.arn
-}
-
-# Lambda permission for API Gateway to invoke WebSocket Connect Lambda
-resource "aws_lambda_permission" "websocket_connect" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.websocket_connect.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.websocket_api.execution_arn}/*/$connect"
 }
