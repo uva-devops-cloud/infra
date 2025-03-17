@@ -93,16 +93,6 @@ resource "aws_api_gateway_integration" "query_intake_integration" {
   ]
 }
 
-# Permission for API Gateway to invoke Lambda
-resource "aws_lambda_permission" "api_gateway_query_intake" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.query_intake.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/${aws_api_gateway_method.query_post.http_method}${aws_api_gateway_resource.query.path}"
-}
-
-
 
 #==============================================================================
 # USER PROFILE ENDPOINT (PUT)
@@ -189,11 +179,3 @@ resource "aws_api_gateway_integration" "query_status_integration" {
   ]
 }
 
-# Permission for API Gateway to invoke Lambda
-resource "aws_lambda_permission" "api_gateway_query_status" {
-  statement_id  = "AllowAPIGatewayInvokeStatus"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.query_status.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/${aws_api_gateway_method.query_status_get.http_method}${aws_api_gateway_resource.query_status.path}"
-}
