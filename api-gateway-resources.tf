@@ -322,20 +322,3 @@ resource "aws_api_gateway_deployment" "api_deployment" {
     aws_api_gateway_gateway_response.unauthorized_response
   ]
 }
-
-# Enable detailed CloudWatch logs for API Gateway
-resource "aws_api_gateway_method_settings" "all" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  stage_name  = aws_api_gateway_deployment.api_deployment.stage_name
-  method_path = "*/*"
-
-  settings {
-    metrics_enabled = true
-    logging_level   = "INFO"
-    data_trace_enabled = true  # Enables request/response logging
-  }
-  
-  depends_on = [
-    aws_api_gateway_deployment.api_deployment
-  ]
-}
