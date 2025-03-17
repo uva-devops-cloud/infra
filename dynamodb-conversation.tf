@@ -10,10 +10,10 @@
 #==============================================================================
 
 resource "aws_dynamodb_table" "conversation_memory" {
-  name           = "ConversationMemory"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "UserId"
-  range_key      = "CorrelationId"
+  name         = "ConversationMemory"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "UserId"
+  range_key    = "CorrelationId"
 
   attribute {
     name = "UserId"
@@ -35,13 +35,20 @@ resource "aws_dynamodb_table" "conversation_memory" {
     Environment = var.environment
     Project     = "StudentPortal"
   }
+
+  global_secondary_index {
+    name            = "UserConversationsIndex"
+    hash_key        = "UserId"
+    range_key       = "ExpirationTime"
+    projection_type = "ALL"
+  }
 }
 
 # Global Secondary Index for retrieving recent conversations by user
 resource "aws_dynamodb_table_global_secondary_index" "user_conversations_index" {
-  name               = "UserConversationsIndex"
-  hash_key           = "UserId"
-  range_key          = "ExpirationTime"
-  table_name         = aws_dynamodb_table.conversation_memory.name
-  projection_type    = "ALL"
+  name            = "UserConversationsIndex"
+  hash_key        = "UserId"
+  range_key       = "ExpirationTime"
+  table_name      = aws_dynamodb_table.conversation_memory.name
+  projection_type = "ALL"
 }

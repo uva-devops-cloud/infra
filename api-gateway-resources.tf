@@ -33,7 +33,8 @@ resource "aws_api_gateway_deployment" "default" {
       aws_api_gateway_method.query_status_get.id,
       aws_api_gateway_integration.query_intake_integration.id,
       aws_api_gateway_integration.update_profile_integration.id,
-      aws_api_gateway_integration.query_status_integration.id
+      aws_api_gateway_integration.query_status_integration.id,
+      "force_deploy_${timestamp()}" # Forces redeployment every apply
     ]))
   }
 
