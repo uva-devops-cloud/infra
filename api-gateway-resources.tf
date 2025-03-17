@@ -10,22 +10,31 @@ resource "aws_api_gateway_deployment" "default" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
   depends_on = [
-    aws_api_gateway_integration.orchestrator_integration,
-    aws_api_gateway_integration.db_migrate_integration,
+    aws_api_gateway_integration.query_intake_integration,
+    aws_api_gateway_integration.update_profile_integration,
+    aws_api_gateway_integration.query_status_integration,
+    aws_api_gateway_method.query_post,
+    aws_api_gateway_method.update_profile,
+    aws_api_gateway_method.query_status_get,
+    aws_api_gateway_resource.query,
+    aws_api_gateway_resource.user_profile,
+    aws_api_gateway_resource.query_status,
     aws_api_gateway_integration.hello_integration,
-    aws_api_gateway_integration.hello_options_integration,
-    aws_api_gateway_integration_response.hello_options_integration_response,
-    aws_api_gateway_integration_response.hello_get_integration_response
+    aws_api_gateway_integration.hello_options_integration
   ]
 
   # Force redeployment on changes
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.hello.id,
-      aws_api_gateway_method.hello_get.id,
-      aws_api_gateway_method.hello_options.id,
-      aws_api_gateway_integration.hello_integration.id,
-      aws_api_gateway_integration.hello_options_integration.id
+      aws_api_gateway_resource.query.id,
+      aws_api_gateway_resource.user_profile.id,
+      aws_api_gateway_resource.query_status.id,
+      aws_api_gateway_method.query_post.id,
+      aws_api_gateway_method.update_profile.id,
+      aws_api_gateway_method.query_status_get.id,
+      aws_api_gateway_integration.query_intake_integration.id,
+      aws_api_gateway_integration.update_profile_integration.id,
+      aws_api_gateway_integration.query_status_integration.id
     ]))
   }
 
