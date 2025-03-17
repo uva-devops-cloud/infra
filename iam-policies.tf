@@ -61,12 +61,15 @@ resource "aws_iam_policy" "orchestrator_policy" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
           "dynamodb:Query",
           "dynamodb:Scan"
         ],
         Resource = [
           aws_dynamodb_table.student_query_requests.arn,
           aws_dynamodb_table.student_query_responses.arn,
+          aws_dynamodb_table.conversation_memory.arn,
+          "${aws_dynamodb_table.conversation_memory.arn}/index/*",
           "${aws_dynamodb_table.student_query_requests.arn}/index/*",
           "${aws_dynamodb_table.student_query_responses.arn}/index/*"
         ],

@@ -31,6 +31,7 @@ resource "aws_lambda_function" "query_intake" {
   environment {
     variables = {
       LLM_ANALYZER_FUNCTION = aws_lambda_function.llm_query_analyzer.function_name
+      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
     }
   }
 
@@ -65,7 +66,8 @@ resource "aws_lambda_function" "llm_query_analyzer" {
     variables = {
       WORKER_DISPATCHER_FUNCTION = aws_lambda_function.worker_dispatcher.function_name,
       LLM_ENDPOINT              = var.llm_endpoint,
-      LLM_API_KEY_SECRET_ARN    = aws_secretsmanager_secret.llm_api_key.arn
+      LLM_API_KEY_SECRET_ARN    = aws_secretsmanager_secret.llm_api_key.arn,
+      CONVERSATION_TABLE_NAME   = aws_dynamodb_table.conversation_memory.name
     }
   }
 
@@ -99,7 +101,8 @@ resource "aws_lambda_function" "worker_dispatcher" {
   environment {
     variables = {
       EVENT_BUS_NAME     = aws_cloudwatch_event_bus.main.name,
-      REQUESTS_TABLE_NAME = aws_dynamodb_table.student_query_requests.name
+      REQUESTS_TABLE_NAME = aws_dynamodb_table.student_query_requests.name,
+      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
     }
   }
 
@@ -133,7 +136,8 @@ resource "aws_lambda_function" "response_aggregator" {
   environment {
     variables = {
       REQUESTS_TABLE_NAME        = aws_dynamodb_table.student_query_requests.name,
-      ANSWER_GENERATOR_FUNCTION = aws_lambda_function.answer_generator.function_name
+      ANSWER_GENERATOR_FUNCTION = aws_lambda_function.answer_generator.function_name,
+      CONVERSATION_TABLE_NAME    = aws_dynamodb_table.conversation_memory.name
     }
   }
 
@@ -169,7 +173,8 @@ resource "aws_lambda_function" "answer_generator" {
       LLM_ENDPOINT           = var.llm_endpoint,
       LLM_API_KEY_SECRET_ARN = aws_secretsmanager_secret.llm_api_key.arn,
       REQUESTS_TABLE_NAME    = aws_dynamodb_table.student_query_requests.name,
-      RESPONSES_TABLE_NAME   = aws_dynamodb_table.student_query_responses.name
+      RESPONSES_TABLE_NAME   = aws_dynamodb_table.student_query_responses.name,
+      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
     }
   }
 
@@ -203,7 +208,8 @@ resource "aws_lambda_function" "query_status" {
   environment {
     variables = {
       REQUESTS_TABLE_NAME = aws_dynamodb_table.student_query_requests.name,
-      RESPONSES_TABLE_NAME = aws_dynamodb_table.student_query_responses.name
+      RESPONSES_TABLE_NAME = aws_dynamodb_table.student_query_responses.name,
+      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
     }
   }
 
