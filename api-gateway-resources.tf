@@ -23,7 +23,6 @@ resource "aws_api_gateway_deployment" "default" {
     aws_api_gateway_integration.hello_options_integration
   ]
 
-  # Force redeployment on changes
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_resource.query.id,

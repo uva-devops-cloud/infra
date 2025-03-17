@@ -30,7 +30,7 @@ resource "aws_lambda_function" "query_intake" {
 
   environment {
     variables = {
-      LLM_ANALYZER_FUNCTION = aws_lambda_function.llm_query_analyzer.function_name
+      LLM_ANALYZER_FUNCTION   = aws_lambda_function.llm_query_analyzer.function_name
       CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
     }
   }
@@ -57,7 +57,7 @@ resource "aws_lambda_function" "llm_query_analyzer" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 60  # Increased for LLM API calls
+  timeout     = 60 # Increased for LLM API calls
   memory_size = 256
 
   # Remove vpc_config to place outside VPC for LLM API access
@@ -65,9 +65,9 @@ resource "aws_lambda_function" "llm_query_analyzer" {
   environment {
     variables = {
       WORKER_DISPATCHER_FUNCTION = aws_lambda_function.worker_dispatcher.function_name,
-      LLM_ENDPOINT              = var.llm_endpoint,
-      LLM_API_KEY_SECRET_ARN    = aws_secretsmanager_secret.llm_api_key.arn,
-      CONVERSATION_TABLE_NAME   = aws_dynamodb_table.conversation_memory.name
+      LLM_ENDPOINT               = var.llm_endpoint,
+      LLM_API_KEY_SECRET_ARN     = aws_secretsmanager_secret.llm_api_key.arn,
+      CONVERSATION_TABLE_NAME    = aws_dynamodb_table.conversation_memory.name
     }
   }
 
@@ -100,8 +100,8 @@ resource "aws_lambda_function" "worker_dispatcher" {
 
   environment {
     variables = {
-      EVENT_BUS_NAME     = aws_cloudwatch_event_bus.main.name,
-      REQUESTS_TABLE_NAME = aws_dynamodb_table.student_query_requests.name,
+      EVENT_BUS_NAME          = aws_cloudwatch_event_bus.main.name,
+      REQUESTS_TABLE_NAME     = aws_dynamodb_table.student_query_requests.name,
       CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
     }
   }
@@ -135,9 +135,9 @@ resource "aws_lambda_function" "response_aggregator" {
 
   environment {
     variables = {
-      REQUESTS_TABLE_NAME        = aws_dynamodb_table.student_query_requests.name,
+      REQUESTS_TABLE_NAME       = aws_dynamodb_table.student_query_requests.name,
       ANSWER_GENERATOR_FUNCTION = aws_lambda_function.answer_generator.function_name,
-      CONVERSATION_TABLE_NAME    = aws_dynamodb_table.conversation_memory.name
+      CONVERSATION_TABLE_NAME   = aws_dynamodb_table.conversation_memory.name
     }
   }
 
@@ -163,17 +163,17 @@ resource "aws_lambda_function" "answer_generator" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 60  # Increased for LLM API calls
+  timeout     = 60 # Increased for LLM API calls
   memory_size = 256
 
   # Remove vpc_config to place outside VPC for LLM API access
 
   environment {
     variables = {
-      LLM_ENDPOINT           = var.llm_endpoint,
-      LLM_API_KEY_SECRET_ARN = aws_secretsmanager_secret.llm_api_key.arn,
-      REQUESTS_TABLE_NAME    = aws_dynamodb_table.student_query_requests.name,
-      RESPONSES_TABLE_NAME   = aws_dynamodb_table.student_query_responses.name,
+      LLM_ENDPOINT            = var.llm_endpoint,
+      LLM_API_KEY_SECRET_ARN  = aws_secretsmanager_secret.llm_api_key.arn,
+      REQUESTS_TABLE_NAME     = aws_dynamodb_table.student_query_requests.name,
+      RESPONSES_TABLE_NAME    = aws_dynamodb_table.student_query_responses.name,
       CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
     }
   }
@@ -207,8 +207,8 @@ resource "aws_lambda_function" "query_status" {
 
   environment {
     variables = {
-      REQUESTS_TABLE_NAME = aws_dynamodb_table.student_query_requests.name,
-      RESPONSES_TABLE_NAME = aws_dynamodb_table.student_query_responses.name,
+      REQUESTS_TABLE_NAME     = aws_dynamodb_table.student_query_requests.name,
+      RESPONSES_TABLE_NAME    = aws_dynamodb_table.student_query_responses.name,
       CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
     }
   }
@@ -229,7 +229,7 @@ resource "aws_lambda_permission" "api_gateway_query_intake" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.query_intake.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/query"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/POST/query"
 }
 
 # Permission for API Gateway to invoke Query Status Lambda
@@ -238,7 +238,7 @@ resource "aws_lambda_permission" "api_gateway_query_status" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.query_status.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/query/{correlationId}"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/GET/query/{correlationId}"
 }
 
 # Permission for EventBridge to invoke Response Aggregator Lambda
