@@ -25,6 +25,11 @@ resource "aws_dynamodb_table" "conversation_memory" {
     type = "S"
   }
 
+  attribute {
+    name = "ExpirationTime"
+    type = "N"
+  }
+
   ttl {
     attribute_name = "ExpirationTime"
     enabled        = true
