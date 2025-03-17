@@ -274,3 +274,51 @@ resource "aws_api_gateway_integration" "query_status_integration" {
     aws_lambda_function.query_status
   ]
 }
+
+# CORS headers needed for 401 responses
+resource "aws_api_gateway_gateway_response" "unauthorized_response" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "UNAUTHORIZED"
+  
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
+# Ensure API Gateway changes are deployed
+resource "aws_api_gateway_deployment" "api_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name  = "dev"
+  
+  # Force redeployment when resources change
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.query.id,
+      aws_api_gateway_method.query_options.id,
+      aws_api_gateway_method.query_post.id,
+      aws_api_gateway_method_response.query_options_200.id,
+      aws_api_gateway_integration_response.query_options_integration_response.id,
+      aws_api_gateway_method_response.query_post_200.id,
+      aws_api_gateway_integration_response.query_post_integration_response.id,
+      aws_api_gateway_gateway_response.unauthorized_response.id
+    ]))
+  }
+  
+  lifecycle {
+    create_before_destroy = true
+  }
+  
+  depends_on = [
+    aws_api_gateway_method.query_options,
+    aws_api_gateway_method.query_post,
+    aws_api_gateway_integration.query_options_integration,
+    aws_api_gateway_integration.query_intake_integration,
+    aws_api_gateway_method_response.query_options_200,
+    aws_api_gateway_integration_response.query_options_integration_response,
+    aws_api_gateway_method_response.query_post_200,
+    aws_api_gateway_integration_response.query_post_integration_response,
+    aws_api_gateway_gateway_response.unauthorized_response
+  ]
+}
