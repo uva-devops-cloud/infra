@@ -287,10 +287,59 @@ resource "aws_api_gateway_gateway_response" "unauthorized_response" {
   }
 }
 
+# Add CORS-related Gateway Responses to handle all error types
+resource "aws_api_gateway_gateway_response" "cors_4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "DEFAULT_4XX"
+  
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "cors_5xx" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "DEFAULT_5XX"
+  
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "unauthorized" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "UNAUTHORIZED"
+  
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "access_denied" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "ACCESS_DENIED"
+  
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
 # Ensure API Gateway changes are deployed
 resource "aws_api_gateway_deployment" "api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
-  stage_name  = "dev"
+  
+  # Use modern approach instead of deprecated stage_name parameter
+  lifecycle {
+    create_before_destroy = true
+  }
   
   # Force redeployment when resources change
   triggers = {
@@ -302,12 +351,11 @@ resource "aws_api_gateway_deployment" "api_deployment" {
       aws_api_gateway_integration_response.query_options_integration_response.id,
       aws_api_gateway_method_response.query_post_200.id,
       aws_api_gateway_integration_response.query_post_integration_response.id,
-      aws_api_gateway_gateway_response.unauthorized_response.id
+      aws_api_gateway_gateway_response.cors_4xx.id,
+      aws_api_gateway_gateway_response.cors_5xx.id, 
+      aws_api_gateway_gateway_response.unauthorized.id,
+      aws_api_gateway_gateway_response.access_denied.id
     ]))
-  }
-  
-  lifecycle {
-    create_before_destroy = true
   }
   
   depends_on = [
@@ -319,6 +367,16 @@ resource "aws_api_gateway_deployment" "api_deployment" {
     aws_api_gateway_integration_response.query_options_integration_response,
     aws_api_gateway_method_response.query_post_200,
     aws_api_gateway_integration_response.query_post_integration_response,
-    aws_api_gateway_gateway_response.unauthorized_response
+    aws_api_gateway_gateway_response.cors_4xx,
+    aws_api_gateway_gateway_response.cors_5xx,
+    aws_api_gateway_gateway_response.unauthorized,
+    aws_api_gateway_gateway_response.access_denied
   ]
+}
+
+# Create a separate API Gateway stage resource
+resource "aws_api_gateway_stage" "dev" {
+  deployment_id = aws_api_gateway_deployment.api_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  stage_name    = "dev"
 }
