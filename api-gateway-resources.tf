@@ -23,7 +23,11 @@ resource "aws_api_gateway_deployment" "default" {
     aws_api_gateway_integration.hello_options_integration,
     aws_api_gateway_integration.query_options_integration,
     aws_api_gateway_integration_response.query_options_integration_response,
-    aws_api_gateway_integration_response.query_post_integration_response
+    aws_api_gateway_integration_response.query_post_integration_response,
+    aws_api_gateway_gateway_response.cors_4xx,
+    aws_api_gateway_gateway_response.cors_5xx,
+    aws_api_gateway_gateway_response.unauthorized,
+    aws_api_gateway_gateway_response.access_denied
   ]
 
   triggers = {
@@ -39,7 +43,11 @@ resource "aws_api_gateway_deployment" "default" {
       aws_api_gateway_integration.query_status_integration.id,
       aws_api_gateway_method.query_options.id,
       aws_api_gateway_method_response.query_options_200.id,
-      aws_api_gateway_method_response.query_post_200.id
+      aws_api_gateway_method_response.query_post_200.id,
+      aws_api_gateway_gateway_response.cors_4xx.id,
+      aws_api_gateway_gateway_response.cors_5xx.id,
+      aws_api_gateway_gateway_response.unauthorized.id,
+      aws_api_gateway_gateway_response.access_denied.id
     ]))
   }
 
@@ -330,53 +338,4 @@ resource "aws_api_gateway_gateway_response" "access_denied" {
     "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
     "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
   }
-}
-
-# Ensure API Gateway changes are deployed
-resource "aws_api_gateway_deployment" "api_deployment" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  
-  # Use modern approach instead of deprecated stage_name parameter
-  lifecycle {
-    create_before_destroy = true
-  }
-  
-  # Force redeployment when resources change
-  triggers = {
-    redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.query.id,
-      aws_api_gateway_method.query_options.id,
-      aws_api_gateway_method.query_post.id,
-      aws_api_gateway_method_response.query_options_200.id,
-      aws_api_gateway_integration_response.query_options_integration_response.id,
-      aws_api_gateway_method_response.query_post_200.id,
-      aws_api_gateway_integration_response.query_post_integration_response.id,
-      aws_api_gateway_gateway_response.cors_4xx.id,
-      aws_api_gateway_gateway_response.cors_5xx.id, 
-      aws_api_gateway_gateway_response.unauthorized.id,
-      aws_api_gateway_gateway_response.access_denied.id
-    ]))
-  }
-  
-  depends_on = [
-    aws_api_gateway_method.query_options,
-    aws_api_gateway_method.query_post,
-    aws_api_gateway_integration.query_options_integration,
-    aws_api_gateway_integration.query_intake_integration,
-    aws_api_gateway_method_response.query_options_200,
-    aws_api_gateway_integration_response.query_options_integration_response,
-    aws_api_gateway_method_response.query_post_200,
-    aws_api_gateway_integration_response.query_post_integration_response,
-    aws_api_gateway_gateway_response.cors_4xx,
-    aws_api_gateway_gateway_response.cors_5xx,
-    aws_api_gateway_gateway_response.unauthorized,
-    aws_api_gateway_gateway_response.access_denied
-  ]
-}
-
-# Create a separate API Gateway stage resource
-resource "aws_api_gateway_stage" "dev" {
-  deployment_id = aws_api_gateway_deployment.api_deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  stage_name    = "dev"
 }
