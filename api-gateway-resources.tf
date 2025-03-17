@@ -1,3 +1,63 @@
+# API Gateway (for Lambda endpoints)
+resource "aws_api_gateway_rest_api" "api" {
+  name        = "students-api"
+  description = "REST API for students"
+  tags        = local.common_tags
+}
+
+# Required for API Gateway to function
+resource "aws_api_gateway_deployment" "default" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+
+  depends_on = [
+    aws_api_gateway_integration.example,
+    aws_api_gateway_integration.orchestrator_integration,
+    aws_api_gateway_integration.db_migrate_integration,
+    aws_api_gateway_integration.hello_integration,
+    aws_api_gateway_integration.hello_options_integration,
+    aws_api_gateway_integration_response.hello_options_integration_response,
+    aws_api_gateway_integration_response.hello_get_integration_response
+  ]
+
+  # Force redeployment on changes
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.hello.id,
+      aws_api_gateway_method.hello_get.id,
+      aws_api_gateway_method.hello_options.id,
+      aws_api_gateway_integration.hello_integration.id,
+      aws_api_gateway_integration.hello_options_integration.id
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Add a stage for the deployment
+resource "aws_api_gateway_stage" "default" {
+  deployment_id = aws_api_gateway_deployment.default.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  stage_name    = var.environment
+
+  depends_on = [aws_api_gateway_deployment.default]
+}
+
+# API Gateway resources for student query system
+#
+# Endpoints:
+# 1. POST /query - Submit a new student query (QueryIntake Lambda)
+# 2. GET /query/{correlationId} - Check status of a query (QueryStatus Lambda)
+# 3. PUT /profile - Update user profile (UpdateProfile Lambda)
+
+#==============================================================================
+# QUERY ENDPOINT (POST)
+#==============================================================================
+# Purpose: Allows clients to submit new student queries
+# Method: POST
+# Authentication: Cognito User Pools
+# Target: QueryIntake Lambda
 resource "aws_api_gateway_resource" "query" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
@@ -42,7 +102,15 @@ resource "aws_lambda_permission" "api_gateway_query_intake" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/${aws_api_gateway_method.query_post.http_method}${aws_api_gateway_resource.query.path}"
 }
 
-# API gateway resource to handle SSO profile edits
+
+
+#==============================================================================
+# USER PROFILE ENDPOINT (PUT)
+#==============================================================================
+# Purpose: Allows users to update their profile information
+# Method: PUT
+# Authentication: Cognito User Pools
+# Target: UpdateProfile Lambda
 resource "aws_api_gateway_resource" "user_profile" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
@@ -74,7 +142,15 @@ resource "aws_lambda_permission" "api_gateway_update_profile" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/${aws_api_gateway_method.update_profile.http_method}${aws_api_gateway_resource.user_profile.path}"
 }
 
-# API Gateway resource for query status endpoint
+
+#==============================================================================
+# QUERY STATUS ENDPOINT (GET)
+#==============================================================================
+# Purpose: Allows clients to check the status of submitted queries
+# Method: GET
+# Authentication: Cognito User Pools
+# Target: QueryStatus Lambda
+# Path Parameters: correlationId
 resource "aws_api_gateway_resource" "query_status" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   parent_id   = aws_api_gateway_resource.query.id

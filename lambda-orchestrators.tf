@@ -1,7 +1,19 @@
 # Split Orchestrator Lambda Functions
 # This file contains the Lambda functions that make up the orchestrator functionality
+#
+# Architecture Flow:
+# 1. Query Intake (API Gateway) → LLM Query Analyzer → Worker Dispatcher
+# 2. Worker Dispatcher → EventBridge → Worker Lambdas
+# 3. Worker Lambdas → EventBridge → Response Aggregator
+# 4. Response Aggregator → Answer Generator
+# 5. Query Status (API Gateway) → DynamoDB (for status checks)
 
-# Query Intake Lambda (No VPC - entry point from API Gateway)
+#==============================================================================
+# QUERY INTAKE LAMBDA
+#==============================================================================
+# Purpose: Entry point from API Gateway, receives student queries and forwards to LLM Analyzer
+# Invoked by: API Gateway POST /query endpoint
+# Invokes: LLM Query Analyzer Lambda
 resource "aws_lambda_function" "query_intake" {
   function_name = "student-query-intake"
   role          = aws_iam_role.orchestrator_lambda_role.arn
@@ -29,7 +41,12 @@ resource "aws_lambda_function" "query_intake" {
   tags = local.common_tags
 }
 
-# LLM Query Analyzer Lambda (No VPC - needs internet access for LLM API)
+#==============================================================================
+# LLM QUERY ANALYZER LAMBDA
+#==============================================================================
+# Purpose: Analyzes student queries using LLM to determine required data sources
+# Invoked by: Query Intake Lambda
+# Invokes: Worker Dispatcher Lambda
 resource "aws_lambda_function" "llm_query_analyzer" {
   function_name = "student-query-llm-analyzer"
   role          = aws_iam_role.orchestrator_lambda_role.arn
@@ -59,7 +76,12 @@ resource "aws_lambda_function" "llm_query_analyzer" {
   tags = local.common_tags
 }
 
-# Worker Dispatcher Lambda (No VPC - needs to publish to EventBridge)
+#==============================================================================
+# WORKER DISPATCHER LAMBDA
+#==============================================================================
+# Purpose: Dispatches tasks to worker Lambdas via EventBridge
+# Invoked by: LLM Query Analyzer Lambda
+# Publishes to: EventBridge (worker events)
 resource "aws_lambda_function" "worker_dispatcher" {
   function_name = "student-query-worker-dispatcher"
   role          = aws_iam_role.orchestrator_lambda_role.arn
@@ -88,7 +110,12 @@ resource "aws_lambda_function" "worker_dispatcher" {
   tags = local.common_tags
 }
 
-# Response Aggregator Lambda (No VPC - triggered by EventBridge)
+#==============================================================================
+# RESPONSE AGGREGATOR LAMBDA
+#==============================================================================
+# Purpose: Collects and aggregates responses from worker Lambdas
+# Invoked by: EventBridge (worker response events)
+# Invokes: Answer Generator Lambda
 resource "aws_lambda_function" "response_aggregator" {
   function_name = "student-query-response-aggregator"
   role          = aws_iam_role.orchestrator_lambda_role.arn
@@ -117,7 +144,12 @@ resource "aws_lambda_function" "response_aggregator" {
   tags = local.common_tags
 }
 
-# Answer Generator Lambda (No VPC - needs internet access for LLM API)
+#==============================================================================
+# ANSWER GENERATOR LAMBDA
+#==============================================================================
+# Purpose: Generates final answers using aggregated data and LLM
+# Invoked by: Response Aggregator Lambda
+# Updates: DynamoDB with final responses
 resource "aws_lambda_function" "answer_generator" {
   function_name = "student-query-answer-generator"
   role          = aws_iam_role.orchestrator_lambda_role.arn
@@ -148,7 +180,12 @@ resource "aws_lambda_function" "answer_generator" {
   tags = local.common_tags
 }
 
-# Query Status Lambda (No VPC - entry point from API Gateway)
+#==============================================================================
+# QUERY STATUS LAMBDA
+#==============================================================================
+# Purpose: Provides status information for client polling
+# Invoked by: API Gateway GET /query/{correlationId} endpoint
+# Reads from: DynamoDB tables for status and response data
 resource "aws_lambda_function" "query_status" {
   function_name = "student-query-status"
   role          = aws_iam_role.orchestrator_lambda_role.arn
@@ -177,7 +214,10 @@ resource "aws_lambda_function" "query_status" {
   tags = local.common_tags
 }
 
-# Lambda permission for API Gateway to invoke Query Intake Lambda
+#==============================================================================
+# LAMBDA PERMISSIONS
+#==============================================================================
+# Permission for API Gateway to invoke Query Intake Lambda
 resource "aws_lambda_permission" "api_gateway_query_intake" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -186,7 +226,7 @@ resource "aws_lambda_permission" "api_gateway_query_intake" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/query"
 }
 
-# Lambda permission for API Gateway to invoke Query Status Lambda
+# Permission for API Gateway to invoke Query Status Lambda
 resource "aws_lambda_permission" "api_gateway_query_status" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
@@ -195,7 +235,7 @@ resource "aws_lambda_permission" "api_gateway_query_status" {
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/query/{correlationId}"
 }
 
-# Lambda permission for EventBridge to invoke Response Aggregator Lambda
+# Permission for EventBridge to invoke Response Aggregator Lambda
 resource "aws_lambda_permission" "eventbridge_response_aggregator" {
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
