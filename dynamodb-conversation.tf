@@ -43,12 +43,3 @@ resource "aws_dynamodb_table" "conversation_memory" {
     projection_type = "ALL"
   }
 }
-
-# Global Secondary Index for retrieving recent conversations by user
-resource "aws_dynamodb_table_global_secondary_index" "user_conversations_index" {
-  name            = "UserConversationsIndex"
-  hash_key        = "UserId"
-  range_key       = "ExpirationTime"
-  table_name      = aws_dynamodb_table.conversation_memory.name
-  projection_type = "ALL"
-}
