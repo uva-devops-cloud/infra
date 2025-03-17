@@ -47,7 +47,11 @@ resource "aws_api_gateway_deployment" "default" {
       aws_api_gateway_gateway_response.cors_4xx.id,
       aws_api_gateway_gateway_response.cors_5xx.id,
       aws_api_gateway_gateway_response.unauthorized.id,
-      aws_api_gateway_gateway_response.access_denied.id
+      aws_api_gateway_gateway_response.access_denied.id,
+      aws_api_gateway_method.query_post.id,
+      aws_api_gateway_method.query_post.authorization,
+      aws_api_gateway_integration.query_intake_integration.id,
+      timestamp()
     ]))
   }
 
