@@ -46,3 +46,8 @@ variable "ssh_public_key" {
   type        = string
   sensitive   = true  # Mark as sensitive
 }
+
+variable "llm_endpoint" {
+  type    = string
+  default = "https://api.openai.com/v1/chat/completions"
+}
