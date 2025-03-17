@@ -148,6 +148,35 @@ resource "aws_lambda_function" "answer_generator" {
   tags = local.common_tags
 }
 
+# Query Status Lambda (No VPC - entry point from API Gateway)
+resource "aws_lambda_function" "query_status" {
+  function_name = "student-query-status"
+  role          = aws_iam_role.orchestrator_lambda_role.arn
+
+  # Use a minimal dummy file - will be replaced by CI/CD
+  filename = "${path.module}/dummy_lambda.zip"
+  handler  = "index.handler"
+  runtime  = "nodejs18.x"
+
+  timeout     = 30
+  memory_size = 256
+
+  # Remove vpc_config to place outside VPC for direct API Gateway access
+
+  environment {
+    variables = {
+      REQUESTS_TABLE_NAME = aws_dynamodb_table.student_query_requests.name,
+      RESPONSES_TABLE_NAME = aws_dynamodb_table.student_query_responses.name
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment
+  ]
+
+  tags = local.common_tags
+}
+
 # Lambda permission for API Gateway to invoke Query Intake Lambda
 resource "aws_lambda_permission" "api_gateway_query_intake" {
   statement_id  = "AllowExecutionFromAPIGateway"
@@ -155,6 +184,15 @@ resource "aws_lambda_permission" "api_gateway_query_intake" {
   function_name = aws_lambda_function.query_intake.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/query"
+}
+
+# Lambda permission for API Gateway to invoke Query Status Lambda
+resource "aws_lambda_permission" "api_gateway_query_status" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.query_status.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/query/{correlationId}"
 }
 
 # Lambda permission for EventBridge to invoke Response Aggregator Lambda
