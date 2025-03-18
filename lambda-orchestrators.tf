@@ -30,11 +30,11 @@ resource "aws_lambda_function" "query_intake" {
 
   environment {
     variables = {
-      LLM_ANALYZER_FUNCTION       = aws_lambda_function.llm_query_analyzer.function_name
-      CONVERSATION_TABLE_NAME     = aws_dynamodb_table.conversation_memory.name
+      LLM_ANALYZER_FUNCTION        = aws_lambda_function.llm_query_analyzer.function_name
+      CONVERSATION_TABLE_NAME      = aws_dynamodb_table.conversation_memory.name
       USER_DATA_GENERATOR_FUNCTION = aws_lambda_function.user_data_generator.function_name
-      REQUESTS_TABLE_NAME         = aws_dynamodb_table.student_query_requests.name
-      RESPONSES_TABLE_NAME        = aws_dynamodb_table.student_query_responses.name
+      REQUESTS_TABLE_NAME          = aws_dynamodb_table.student_query_requests.name
+      RESPONSES_TABLE_NAME         = aws_dynamodb_table.student_query_responses.name
     }
   }
 
@@ -58,7 +58,7 @@ resource "aws_lambda_function" "llm_query_analyzer" {
 
   # Use a minimal dummy file - will be replaced by CI/CD
   filename = "${path.module}/dummy_lambda.zip"
-  handler  = "python/lambda_function.lambda_handler"
+  handler  = "lambda_function.lambda_handler"
   runtime  = "python3.9"
 
   timeout     = 30
@@ -160,7 +160,7 @@ resource "aws_lambda_function" "answer_generator" {
 
   # Use a minimal dummy file - will be replaced by CI/CD
   filename = "${path.module}/dummy_lambda.zip"
-  handler  = "python/lambda_function.lambda_handler"
+  handler  = "lambda_function.lambda_handler"
   runtime  = "python3.9"
 
   timeout     = 30
@@ -170,10 +170,10 @@ resource "aws_lambda_function" "answer_generator" {
   environment {
     variables = {
       CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name,
-      REQUESTS_TABLE_NAME    = aws_dynamodb_table.student_query_requests.name,
-      RESPONSES_TABLE_NAME   = aws_dynamodb_table.student_query_responses.name,
-      LLM_ENDPOINT           = var.llm_endpoint,
-      LLM_API_KEY_SECRET_ARN = aws_secretsmanager_secret.llm_api_key.arn
+      REQUESTS_TABLE_NAME     = aws_dynamodb_table.student_query_requests.name,
+      RESPONSES_TABLE_NAME    = aws_dynamodb_table.student_query_responses.name,
+      LLM_ENDPOINT            = var.llm_endpoint,
+      LLM_API_KEY_SECRET_ARN  = aws_secretsmanager_secret.llm_api_key.arn
     }
   }
 
@@ -241,9 +241,9 @@ resource "aws_lambda_function" "user_data_generator" {
 
   environment {
     variables = {
-      DB_SECRET_ARN     = aws_secretsmanager_secret.db_secret.arn
-      DB_HOST           = module.rds.db_instance_address
-      DB_NAME           = "studentportal"
+      DB_SECRET_ARN = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST       = module.rds.db_instance_address
+      DB_NAME       = "studentportal"
     }
   }
 
