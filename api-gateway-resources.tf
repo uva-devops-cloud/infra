@@ -286,6 +286,105 @@ resource "aws_api_gateway_integration" "query_status_integration" {
   ]
 }
 
+# OPTIONS method for CORS preflight requests for query status endpoint
+resource "aws_api_gateway_method" "query_status_options" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.query_status.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+  
+  depends_on = [aws_api_gateway_resource.query_status]
+}
+
+# Mock integration for OPTIONS method
+resource "aws_api_gateway_integration" "query_status_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_options.http_method
+  type        = "MOCK"
+  
+  # Mock request template
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+  
+  depends_on = [aws_api_gateway_method.query_status_options]
+}
+
+# Response for OPTIONS preflight request
+resource "aws_api_gateway_method_response" "query_status_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_options.http_method
+  status_code = "200"
+  
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+  
+  response_models = {
+    "application/json" = "Empty"
+  }
+  
+  depends_on = [aws_api_gateway_method.query_status_options]
+}
+
+# Integration response for OPTIONS
+resource "aws_api_gateway_integration_response" "query_status_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_options.http_method
+  status_code = aws_api_gateway_method_response.query_status_options_response.status_code
+  
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'https://d1npgfnzouv53u.cloudfront.net'"
+  }
+  
+  depends_on = [
+    aws_api_gateway_method_response.query_status_options_response,
+    aws_api_gateway_integration.query_status_options_integration
+  ]
+}
+
+# Add CORS headers to GET method response
+resource "aws_api_gateway_method_response" "query_status_get_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_get.http_method
+  status_code = "200"
+  
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+  
+  response_models = {
+    "application/json" = "Empty"
+  }
+  
+  depends_on = [aws_api_gateway_method.query_status_get]
+}
+
+# Add CORS headers to the integration response
+resource "aws_api_gateway_integration_response" "query_status_get_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_get.http_method
+  status_code = aws_api_gateway_method_response.query_status_get_response.status_code
+  
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'https://d1npgfnzouv53u.cloudfront.net'"
+  }
+  
+  depends_on = [
+    aws_api_gateway_method_response.query_status_get_response,
+    aws_api_gateway_integration.query_status_integration
+  ]
+}
+
 # CORS headers needed for 401 responses
 resource "aws_api_gateway_gateway_response" "unauthorized_response" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
