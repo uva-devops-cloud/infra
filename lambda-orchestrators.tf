@@ -99,13 +99,21 @@ resource "aws_lambda_function" "worker_dispatcher" {
   timeout     = 30
   memory_size = 256
 
-  # Remove vpc_config to place outside VPC
+  # Add VPC configuration for database access
+  vpc_config {
+    subnet_ids         = [aws_subnet.private.id]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
 
   environment {
     variables = {
       EVENT_BUS_NAME          = aws_cloudwatch_event_bus.main.name,
       REQUESTS_TABLE_NAME     = aws_dynamodb_table.student_query_requests.name,
-      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
+      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name,
+      DB_SECRET_ARN           = aws_secretsmanager_secret.db_secret.arn,
+      DB_HOST                 = module.rds.db_instance_address,
+      DB_NAME                 = "studentportal",
+      DB_PORT                 = "5432"
     }
   }
 
