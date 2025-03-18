@@ -48,23 +48,23 @@ resource "aws_lambda_function" "query_intake" {
 #==============================================================================
 # LLM QUERY ANALYZER LAMBDA
 #==============================================================================
-# Purpose: Analyzes student queries using LLM to determine intent and required data
-# Source: Query Intake Lambda (synchronous invocation)
-# Target: Worker Dispatcher Lambda (if data retrieval is needed)
-# Used for: Intent recognition and small talk detection
+# Purpose: Analyzes student queries using LLM to determine required data sources
+# Invoked by: Query Intake Lambda
+# Invokes: Worker Dispatcher Lambda
 resource "aws_lambda_function" "llm_query_analyzer" {
   function_name = "student-query-llm-analyzer"
   role          = aws_iam_role.orchestrator_lambda_role.arn
 
   # Use a minimal dummy file - will be replaced by CI/CD
   filename = "${path.module}/dummy_lambda.zip"
-  handler  = "python/lambda_function.lambda_handler"
-  runtime  = "python3.9"
+  handler  = "index.handler"
+  runtime  = "nodejs18.x"
 
-  timeout     = 30
-  memory_size = 512
+  timeout     = 60 # Increased for LLM API calls
+  memory_size = 256
 
-  # Configure environment variables
+  # Remove vpc_config to place outside VPC for LLM API access
+
   environment {
     variables = {
       WORKER_DISPATCHER_FUNCTION = aws_lambda_function.worker_dispatcher.function_name,
