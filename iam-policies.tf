@@ -149,14 +149,8 @@ resource "aws_iam_policy" "worker_policy" {
           "lambda:InvokeFunction",
           "lambda:InvokeAsync"
         ],
-        Resource = [
-          aws_lambda_function.get_student_data.arn,
-          aws_lambda_function.get_student_courses.arn,
-          aws_lambda_function.update_profile.arn,
-          aws_lambda_function.hello_world.arn,
-          aws_lambda_function.get_program_details.arn
-        ],
-        Effect = "Allow"
+        Resource = ["arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:*"],
+        Effect   = "Allow"
       }
     ]
   })
