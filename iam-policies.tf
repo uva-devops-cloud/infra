@@ -73,7 +73,7 @@ resource "aws_iam_policy" "orchestrator_policy" {
           "${aws_dynamodb_table.student_query_requests.arn}/index/*",
           "${aws_dynamodb_table.student_query_responses.arn}/index/*"
         ],
-        Effect   = "Allow"
+        Effect = "Allow"
       },
       {
         Action = [
@@ -84,10 +84,14 @@ resource "aws_iam_policy" "orchestrator_policy" {
       },
       {
         Action = [
-          "secretsmanager:GetSecretValue"
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
         ],
-        Resource = aws_secretsmanager_secret.llm_api_key.arn,
-        Effect   = "Allow"
+        Resources = [
+          aws_secretsmanager_secret.db_secret.arn,
+          aws_secretsmanager_secret.llm_api_key.arn
+        ]
+        Effect = "Allow"
       }
     ]
   })
@@ -154,7 +158,7 @@ resource "aws_iam_policy" "worker_policy" {
 # Used by: UpdateProfile Lambda
 resource "aws_iam_role" "update_profile_role" {
   name = "lambda-update-profile-role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
@@ -165,7 +169,7 @@ resource "aws_iam_role" "update_profile_role" {
       }
     }]
   })
-  
+
   tags = local.common_tags
 }
 
@@ -173,7 +177,7 @@ resource "aws_iam_role" "update_profile_role" {
 resource "aws_iam_policy" "update_profile_policy" {
   name        = "lambda-update-profile-policy"
   description = "Allow Lambda to update user attributes in Cognito"
-  
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -184,7 +188,7 @@ resource "aws_iam_policy" "update_profile_policy" {
           "logs:PutLogEvents"
         ],
         Resource = "arn:aws:logs:*:*:*",
-        Effect = "Allow"
+        Effect   = "Allow"
       },
       {
         Action = [
@@ -192,7 +196,7 @@ resource "aws_iam_policy" "update_profile_policy" {
           "cognito-idp:AdminGetUser"
         ],
         Resource = aws_cognito_user_pool.students.arn,
-        Effect = "Allow"
+        Effect   = "Allow"
       }
     ]
   })
