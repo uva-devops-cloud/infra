@@ -241,10 +241,12 @@ resource "aws_lambda_function" "user_data_generator" {
   timeout     = 60 # Higher timeout for database operations
   memory_size = 256
 
-  # Use the same VPC config as other database-connected Lambdas
-  # This ensures it has access to the RDS database
+  # Configure VPC access for database connectivity
   vpc_config {
-    subnet_ids         = local.private_subnet_ids
+    subnet_ids         = [
+      aws_subnet.private_subnet.id,
+      aws_subnet.private_subnet_b.id
+    ]
     security_group_ids = [aws_security_group.lambda_sg.id]
   }
 
