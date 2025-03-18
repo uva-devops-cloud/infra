@@ -44,12 +44,19 @@ variable "environment" {
 variable "ssh_public_key" {
   description = "Public SSH key for EC2 instance access"
   type        = string
-  sensitive   = true  # Mark as sensitive
+  sensitive   = true # Mark as sensitive
 }
 
 variable "llm_endpoint" {
   type    = string
   default = "https://api.openai.com/v1/chat/completions"
+}
+
+variable "llm_api_key" {
+  description = "API key for LLM service (e.g., Anthropic)"
+  type        = string
+  sensitive   = true
+  default     = "" # Empty default, will be provided by GitHub Actions
 }
 
 # Database configuration for UserDataGenerator Lambda
