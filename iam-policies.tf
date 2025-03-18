@@ -84,14 +84,10 @@ resource "aws_iam_policy" "orchestrator_policy" {
       },
       {
         Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
+          "secretsmanager:GetSecretValue"
         ],
-        Resource = [
-          aws_secretsmanager_secret.db_secret.arn,
-          aws_secretsmanager_secret.llm_api_key.arn
-        ],
-        Effect = "Allow"
+        Resource = aws_secretsmanager_secret.llm_api_key.arn,
+        Effect   = "Allow"
       }
     ]
   })
@@ -105,6 +101,7 @@ resource "aws_iam_policy" "orchestrator_policy" {
 # - Access RDS database via Secrets Manager
 # - Create VPC network interfaces
 # - Write to CloudWatch Logs
+# - Invoke other Lambda functions
 # Used by: GetStudentData, GetStudentCourses, GetProgramDetails, etc.
 resource "aws_iam_policy" "worker_policy" {
   name        = "worker-lambda-policy"
@@ -126,8 +123,19 @@ resource "aws_iam_policy" "worker_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
-        Resource = "arn:aws:logs:*:*:*",
-        Effect   = "Allow"
+        Resource = [
+          aws_cloudwatch_log_group.get_student_data.arn,
+          aws_cloudwatch_log_group.get_student_courses.arn,
+          aws_cloudwatch_log_group.update_profile.arn,
+          aws_cloudwatch_log_group.hello_world.arn,
+          aws_cloudwatch_log_group.get_program_details.arn,
+          "${aws_cloudwatch_log_group.get_student_data.arn}:*",
+          "${aws_cloudwatch_log_group.get_student_courses.arn}:*",
+          "${aws_cloudwatch_log_group.update_profile.arn}:*",
+          "${aws_cloudwatch_log_group.hello_world.arn}:*",
+          "${aws_cloudwatch_log_group.get_program_details.arn}:*"
+        ],
+        Effect = "Allow"
       },
       {
         Action = [
@@ -144,6 +152,20 @@ resource "aws_iam_policy" "worker_policy" {
         ],
         Resource = aws_secretsmanager_secret.db_secret.arn,
         Effect   = "Allow"
+      },
+      {
+        Action = [
+          "lambda:InvokeFunction",
+          "lambda:InvokeAsync"
+        ],
+        Resource = [
+          aws_lambda_function.get_student_data.arn,
+          aws_lambda_function.get_student_courses.arn,
+          aws_lambda_function.update_profile.arn,
+          aws_lambda_function.hello_world.arn,
+          aws_lambda_function.get_program_details.arn
+        ],
+        Effect = "Allow"
       }
     ]
   })
