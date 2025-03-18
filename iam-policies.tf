@@ -90,7 +90,7 @@ resource "aws_iam_policy" "orchestrator_policy" {
         Resources = [
           aws_secretsmanager_secret.db_secret.arn,
           aws_secretsmanager_secret.llm_api_key.arn
-        ]
+        ],
         Effect = "Allow"
       }
     ]
