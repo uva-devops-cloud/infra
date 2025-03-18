@@ -243,10 +243,7 @@ resource "aws_lambda_function" "user_data_generator" {
 
   # Configure VPC access for database connectivity
   vpc_config {
-    subnet_ids         = [
-      aws_subnet.private_subnet.id,
-      aws_subnet.private_subnet_b.id
-    ]
+    subnet_ids         = [aws_subnet.private.id]
     security_group_ids = [aws_security_group.lambda_sg.id]
   }
 
