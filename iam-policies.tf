@@ -124,7 +124,7 @@ resource "aws_iam_policy" "worker_policy" {
           "logs:PutLogEvents"
         ],
         Resource = [
-          "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*:*"
+          "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*:*"
         ],
         Effect = "Allow"
       },
@@ -149,7 +149,7 @@ resource "aws_iam_policy" "worker_policy" {
           "lambda:InvokeFunction",
           "lambda:InvokeAsync"
         ],
-        Resource = ["arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:*"],
+        Resource = ["arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:*"],
         Effect   = "Allow"
       }
     ]
