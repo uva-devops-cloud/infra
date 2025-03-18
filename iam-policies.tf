@@ -105,7 +105,7 @@ resource "aws_iam_policy" "orchestrator_policy" {
 # Used by: GetStudentData, GetStudentCourses, GetProgramDetails, etc.
 resource "aws_iam_policy" "worker_policy" {
   name        = "worker-lambda-policy"
-  description = "Policy for worker lambdas to communicate with EventBridge and RDS"
+  description = "Policy for worker Lambda functions"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -124,16 +124,7 @@ resource "aws_iam_policy" "worker_policy" {
           "logs:PutLogEvents"
         ],
         Resource = [
-          aws_cloudwatch_log_group.get_student_data.arn,
-          aws_cloudwatch_log_group.get_student_courses.arn,
-          aws_cloudwatch_log_group.update_profile.arn,
-          aws_cloudwatch_log_group.hello_world.arn,
-          aws_cloudwatch_log_group.get_program_details.arn,
-          "${aws_cloudwatch_log_group.get_student_data.arn}:*",
-          "${aws_cloudwatch_log_group.get_student_courses.arn}:*",
-          "${aws_cloudwatch_log_group.update_profile.arn}:*",
-          "${aws_cloudwatch_log_group.hello_world.arn}:*",
-          "${aws_cloudwatch_log_group.get_program_details.arn}:*"
+          "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/*:*"
         ],
         Effect = "Allow"
       },
