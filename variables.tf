@@ -51,3 +51,35 @@ variable "llm_endpoint" {
   type    = string
   default = "https://api.openai.com/v1/chat/completions"
 }
+
+# Database configuration for UserDataGenerator Lambda
+variable "db_host" {
+  description = "Database host for Lambda functions that need database access"
+  type        = string
+  default     = "student-db.cluster-xyz.eu-west-2.rds.amazonaws.com"
+}
+
+variable "db_name" {
+  description = "Database name for student data"
+  type        = string
+  default     = "student_data"
+}
+
+variable "db_port" {
+  description = "Database port"
+  type        = number
+  default     = 5432
+}
+
+# Lambda VPC configuration
+variable "lambda_subnet_ids" {
+  description = "Subnet IDs for Lambda functions that need VPC access"
+  type        = list(string)
+  default     = []
+}
+
+variable "lambda_security_group_ids" {
+  description = "Security group IDs for Lambda functions that need VPC access"
+  type        = list(string)
+  default     = []
+}

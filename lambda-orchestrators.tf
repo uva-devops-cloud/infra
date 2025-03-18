@@ -30,8 +30,11 @@ resource "aws_lambda_function" "query_intake" {
 
   environment {
     variables = {
-      LLM_ANALYZER_FUNCTION   = aws_lambda_function.llm_query_analyzer.function_name
-      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
+      LLM_ANALYZER_FUNCTION       = aws_lambda_function.llm_query_analyzer.function_name
+      CONVERSATION_TABLE_NAME     = aws_dynamodb_table.conversation_memory.name
+      USER_DATA_GENERATOR_FUNCTION = aws_lambda_function.user_data_generator.function_name
+      REQUESTS_TABLE_NAME         = aws_dynamodb_table.student_query_requests.name
+      RESPONSES_TABLE_NAME        = aws_dynamodb_table.student_query_responses.name
     }
   }
 
@@ -215,6 +218,47 @@ resource "aws_lambda_function" "query_status" {
 
   depends_on = [
     aws_iam_role_policy_attachment.orchestrator_policy_attachment
+  ]
+
+  tags = local.common_tags
+}
+
+#==============================================================================
+# USER DATA GENERATOR LAMBDA
+#==============================================================================
+# Purpose: Generates random student data for newly registered users
+# Invoked by: Query Intake Lambda when a user makes their first query
+# Connects to: PostgreSQL database to create student records
+resource "aws_lambda_function" "user_data_generator" {
+  function_name = "student-query-user-data-generator"
+  role          = aws_iam_role.orchestrator_lambda_role.arn
+
+  # Use a minimal dummy file - will be replaced by CI/CD
+  filename = "${path.module}/dummy_lambda.zip"
+  handler  = "index.handler"
+  runtime  = "nodejs18.x"
+
+  timeout     = 60 # Higher timeout for database operations
+  memory_size = 256
+
+  # Use the same VPC config as other database-connected Lambdas
+  # This ensures it has access to the RDS database
+  vpc_config {
+    subnet_ids         = local.private_subnet_ids
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
+  environment {
+    variables = {
+      DB_SECRET_ARN     = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST           = module.rds.db_instance_address
+      DB_NAME           = "studentportal"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    module.rds
   ]
 
   tags = local.common_tags
