@@ -49,7 +49,8 @@ variable "ssh_public_key" {
 
 variable "llm_endpoint" {
   type    = string
-  default = "https://api.openai.com/v1/chat/completions"
+  default = "https://api.anthropic.com/v1/messages"
+  description = "Endpoint for the LLM API (Anthropic Claude)"
 }
 
 variable "llm_api_key" {
