@@ -84,10 +84,14 @@ resource "aws_iam_policy" "orchestrator_policy" {
       },
       {
         Action = [
-          "secretsmanager:GetSecretValue"
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
         ],
-        Resource = aws_secretsmanager_secret.llm_api_key.arn,
-        Effect   = "Allow"
+        Resource = [
+          aws_secretsmanager_secret.db_secret.arn,
+          aws_secretsmanager_secret.llm_api_key.arn
+        ],
+        Effect = "Allow"
       }
     ]
   })
@@ -101,7 +105,6 @@ resource "aws_iam_policy" "orchestrator_policy" {
 # - Access RDS database via Secrets Manager
 # - Create VPC network interfaces
 # - Write to CloudWatch Logs
-# - Invoke other Lambda functions
 # Used by: GetStudentData, GetStudentCourses, GetProgramDetails, etc.
 resource "aws_iam_policy" "worker_policy" {
   name        = "worker-lambda-policy"
