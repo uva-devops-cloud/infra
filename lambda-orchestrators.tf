@@ -35,6 +35,10 @@ resource "aws_lambda_function" "query_intake" {
       USER_DATA_GENERATOR_FUNCTION = aws_lambda_function.user_data_generator.function_name
       REQUESTS_TABLE_NAME          = aws_dynamodb_table.student_query_requests.name
       RESPONSES_TABLE_NAME         = aws_dynamodb_table.student_query_responses.name
+      DB_SECRET_ARN                = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST                      = module.rds.db_instance_address
+      DB_NAME                      = "studentportal"
+      DB_PORT                      = "5432"
     }
   }
 
