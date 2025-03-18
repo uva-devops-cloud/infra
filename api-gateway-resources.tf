@@ -260,8 +260,8 @@ resource "aws_api_gateway_method" "query_status_get" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.query_status.id
   http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
+  authorization = "NONE"
+  
   request_parameters = {
     "method.request.path.correlationId" = true
   }
