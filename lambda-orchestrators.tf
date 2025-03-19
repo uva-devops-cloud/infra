@@ -23,7 +23,7 @@ resource "aws_lambda_function" "query_intake" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 30
+  timeout     = 60
   memory_size = 256
 
   # Remove vpc_config to place outside VPC for direct API Gateway access
@@ -65,7 +65,7 @@ resource "aws_lambda_function" "llm_query_analyzer" {
   handler  = "lambda_function.lambda_handler"
   runtime  = "python3.9"
 
-  timeout     = 30
+  timeout     = 120
   memory_size = 512
 
   # Configure environment variables
@@ -96,7 +96,7 @@ resource "aws_lambda_function" "worker_dispatcher" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 30
+  timeout     = 120
   memory_size = 256
 
   # Add VPC configuration for database access
@@ -139,7 +139,7 @@ resource "aws_lambda_function" "response_aggregator" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 30
+  timeout     = 120
   memory_size = 256
 
   # Remove vpc_config to place outside VPC
@@ -175,7 +175,7 @@ resource "aws_lambda_function" "answer_generator" {
   handler  = "lambda_function.lambda_handler"
   runtime  = "python3.9"
 
-  timeout     = 30
+  timeout     = 120
   memory_size = 512
 
   # Configure environment variables
