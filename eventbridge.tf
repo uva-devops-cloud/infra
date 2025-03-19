@@ -2,16 +2,28 @@
 #
 # Worker Lambda Event Flow:
 # 1. WorkerDispatcher Lambda → EventBridge (worker events)
-# 2. EventBridge rules → Worker Lambdas (based on detail_type)
+# 2. EventBridge rules → Worker Lambdas (based on detail-type)
 # 3. Worker Lambdas → EventBridge (worker responses)
 # 4. Worker response rule → ResponseAggregator Lambda
+
+#==============================================================================
+# EVENT BUS
+#==============================================================================
+resource "aws_cloudwatch_event_bus" "main" {
+  name = "main-event-bus"
+  tags = {
+    Name        = "main-event-bus"
+    Environment = "dev"
+    Tier        = "free"
+  }
+}
 
 #==============================================================================
 # WORKER LAMBDA RULES
 #==============================================================================
 # Each rule below is responsible for triggering a specific worker Lambda
-# based on the detail_type in the event. The WorkerDispatcher Lambda
-# publishes events with the appropriate detail_type to trigger the needed workers.
+# based on the detail-type in the event. The WorkerDispatcher Lambda
+# publishes events with the appropriate detail-type to trigger the needed workers.
 
 
 
@@ -28,7 +40,7 @@ resource "aws_cloudwatch_event_rule" "get_student_data_rule" {
 
   event_pattern = jsonencode({
     source      = ["student.query.orchestrator"],
-    detail_type = ["GetStudentData"]
+    detail-type = ["GetStudentData"]
   })
 
   depends_on = [aws_cloudwatch_event_bus.main]
@@ -68,7 +80,7 @@ resource "aws_cloudwatch_event_rule" "get_student_courses_rule" {
 
   event_pattern = jsonencode({
     source      = ["student.query.orchestrator"],
-    detail_type = ["GetStudentCourses"]
+    detail-type = ["GetStudentCourses"]
   })
 
   depends_on = [aws_cloudwatch_event_bus.main]
@@ -108,7 +120,7 @@ resource "aws_cloudwatch_event_rule" "get_program_details_rule" {
 
   event_pattern = jsonencode({
     source      = ["student.query.orchestrator"],
-    detail_type = ["GetProgramDetails"]
+    detail-type = ["GetProgramDetails"]
   })
 
   depends_on = [aws_cloudwatch_event_bus.main]
@@ -148,7 +160,7 @@ resource "aws_cloudwatch_event_rule" "get_course_details_rule" {
 
   event_pattern = jsonencode({
     source      = ["student.query.orchestrator"],
-    detail_type = ["GetCourseDetails"]
+    detail-type = ["GetCourseDetails"]
   })
 
   depends_on = [aws_cloudwatch_event_bus.main]
@@ -188,7 +200,7 @@ resource "aws_cloudwatch_event_rule" "get_enrollment_status_rule" {
 
   event_pattern = jsonencode({
     source      = ["student.query.orchestrator"],
-    detail_type = ["GetEnrollmentStatus"]
+    detail-type = ["GetEnrollmentStatus"]
   })
 
   depends_on = [aws_cloudwatch_event_bus.main]
@@ -228,7 +240,7 @@ resource "aws_cloudwatch_event_rule" "get_usage_info_rule" {
 
   event_pattern = jsonencode({
     source      = ["student.query.orchestrator"],
-    detail_type = ["GetUsageInfo"]
+    detail-type = ["GetUsageInfo"]
   })
 
   depends_on = [aws_cloudwatch_event_bus.main]
@@ -255,27 +267,6 @@ resource "aws_lambda_permission" "allow_eventbridge_get_usage_info" {
   source_arn    = aws_cloudwatch_event_rule.get_usage_info_rule.arn
 }
 
-# EventBridge rules for the split orchestrator architecture
-#
-# Architecture Flow:
-# 1. Worker Dispatcher Lambda → EventBridge (worker events)
-# 2. Worker Lambdas → EventBridge (worker responses)
-# 3. EventBridge (worker responses) → Response Aggregator Lambda
-
-#==============================================================================
-# EVENT BUS
-#==============================================================================
-# Purpose: Main event bus for communication between orchestrator and worker Lambdas
-# Used by: WorkerDispatcher, Worker Lambdas, ResponseAggregator
-resource "aws_cloudwatch_event_bus" "main" {
-  name = "main-event-bus"
-
-  tags = {
-    Name        = "main-event-bus"
-    Environment = "dev"
-    Tier        = "free"
-  }
-}
 
 #==============================================================================
 # WORKER RESPONSE RULE
@@ -290,7 +281,7 @@ resource "aws_cloudwatch_event_rule" "worker_response_rule" {
 
   event_pattern = jsonencode({
     source      = ["student.query.worker"],
-    detail_type = [{ suffix = "Response" }]
+    detail-type = [{ suffix = "Response" }]
   })
 
   depends_on = [aws_cloudwatch_event_bus.main]
