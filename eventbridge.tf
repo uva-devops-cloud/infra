@@ -13,27 +13,7 @@
 # based on the detail_type in the event. The WorkerDispatcher Lambda
 # publishes events with the appropriate detail_type to trigger the needed workers.
 
-#------------------------------------------------------
-# GetStudentCurrentDegree Resources
-#------------------------------------------------------
-# Purpose: Triggers the Lambda that retrieves a student's current degree info
-# Source: WorkerDispatcher Lambda (via EventBridge)
-# Target: GetStudentCurrentDegree Lambda
-resource "aws_cloudwatch_event_rule" "get_student_degree_rule" {
-  name           = "get-student-degree-rule"
-  description    = "Rule to trigger get-student-degree lambda"
-  event_bus_name = aws_cloudwatch_event_bus.main.name
 
-  event_pattern = jsonencode({
-    source      = ["student.query.orchestrator"],
-    detail_type = ["GetStudentCurrentDegree"],
-  })
-
-  depends_on = [aws_cloudwatch_event_bus.main]
-  tags       = local.common_tags
-}
-
-# Note: Target and permission for GetStudentCurrentDegree appear to be missing
 
 #------------------------------------------------------
 # GetStudentData Resources
@@ -153,6 +133,126 @@ resource "aws_lambda_permission" "allow_eventbridge_get_program_details" {
   function_name = aws_lambda_function.get_program_details.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.get_program_details_rule.arn
+}
+
+#------------------------------------------------------
+# GetCourseDetails Resources
+#------------------------------------------------------
+# Purpose: Triggers the Lambda that retrieves details about courses
+# Source: WorkerDispatcher Lambda (via EventBridge)
+# Target: GetCourseDetails Lambda
+resource "aws_cloudwatch_event_rule" "get_course_details_rule" {
+  name           = "get-course-details-rule"
+  description    = "Rule to trigger get-course-details lambda"
+  event_bus_name = aws_cloudwatch_event_bus.main.name
+
+  event_pattern = jsonencode({
+    source      = ["student.query.orchestrator"],
+    detail_type = ["GetCourseDetails"]
+  })
+
+  depends_on = [aws_cloudwatch_event_bus.main]
+  tags       = local.common_tags
+}
+
+resource "aws_cloudwatch_event_target" "get_course_details_target" {
+  rule           = aws_cloudwatch_event_rule.get_course_details_rule.name
+  event_bus_name = aws_cloudwatch_event_bus.main.name
+  target_id      = "GetCourseDetailsLambda"
+  arn            = aws_lambda_function.get_course_details.arn
+
+  depends_on = [
+    aws_cloudwatch_event_rule.get_course_details_rule,
+    aws_lambda_function.get_course_details
+  ]
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_get_course_details" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_course_details.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.get_course_details_rule.arn
+}
+
+#------------------------------------------------------
+# GetEnrollmentStatus Resources
+#------------------------------------------------------
+# Purpose: Triggers the Lambda that retrieves a student's enrollment status
+# Source: WorkerDispatcher Lambda (via EventBridge)
+# Target: GetEnrollmentStatus Lambda
+resource "aws_cloudwatch_event_rule" "get_enrollment_status_rule" {
+  name           = "get-enrollment-status-rule"
+  description    = "Rule to trigger get-enrollment-status lambda"
+  event_bus_name = aws_cloudwatch_event_bus.main.name
+
+  event_pattern = jsonencode({
+    source      = ["student.query.orchestrator"],
+    detail_type = ["GetEnrollmentStatus"]
+  })
+
+  depends_on = [aws_cloudwatch_event_bus.main]
+  tags       = local.common_tags
+}
+
+resource "aws_cloudwatch_event_target" "get_enrollment_status_target" {
+  rule           = aws_cloudwatch_event_rule.get_enrollment_status_rule.name
+  event_bus_name = aws_cloudwatch_event_bus.main.name
+  target_id      = "GetEnrollmentStatusLambda"
+  arn            = aws_lambda_function.get_enrollment_status.arn
+
+  depends_on = [
+    aws_cloudwatch_event_rule.get_enrollment_status_rule,
+    aws_lambda_function.get_enrollment_status
+  ]
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_get_enrollment_status" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_enrollment_status.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.get_enrollment_status_rule.arn
+}
+
+#------------------------------------------------------
+# GetUsageInfo Resources
+#------------------------------------------------------
+# Purpose: Triggers the Lambda that retrieves system usage information
+# Source: WorkerDispatcher Lambda (via EventBridge)
+# Target: GetUsageInfo Lambda
+resource "aws_cloudwatch_event_rule" "get_usage_info_rule" {
+  name           = "get-usage-info-rule"
+  description    = "Rule to trigger get-usage-info lambda"
+  event_bus_name = aws_cloudwatch_event_bus.main.name
+
+  event_pattern = jsonencode({
+    source      = ["student.query.orchestrator"],
+    detail_type = ["GetUsageInfo"]
+  })
+
+  depends_on = [aws_cloudwatch_event_bus.main]
+  tags       = local.common_tags
+}
+
+resource "aws_cloudwatch_event_target" "get_usage_info_target" {
+  rule           = aws_cloudwatch_event_rule.get_usage_info_rule.name
+  event_bus_name = aws_cloudwatch_event_bus.main.name
+  target_id      = "GetUsageInfoLambda"
+  arn            = aws_lambda_function.get_usage_info.arn
+
+  depends_on = [
+    aws_cloudwatch_event_rule.get_usage_info_rule,
+    aws_lambda_function.get_usage_info
+  ]
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_get_usage_info" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_usage_info.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.get_usage_info_rule.arn
 }
 
 # EventBridge rules for the split orchestrator architecture
