@@ -285,7 +285,7 @@ resource "aws_lambda_permission" "api_gateway_query_status" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.query_status.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/GET/query/{correlationId}"
+  source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*/GET/query/*"
 }
 
 # Permission for EventBridge to invoke Response Aggregator Lambda
