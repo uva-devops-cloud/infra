@@ -13,7 +13,8 @@ resource "aws_api_gateway_method" "hello_get" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.hello.id
   http_method   = "GET"
-  authorization = "NONE" # Public endpoint for simplicity
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
 }
 
 # Integration between API Gateway and Lambda

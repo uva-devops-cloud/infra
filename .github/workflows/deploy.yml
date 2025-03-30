@@ -21,6 +21,7 @@ jobs:
     secrets:
       google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+      anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
   deploy-prod:
     name: Deploy to Prod
@@ -33,3 +34,4 @@ jobs:
     secrets:
       google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+      anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}

@@ -20,6 +20,9 @@ resource "aws_lambda_function" "get_student_data" {
     variables = {
       EVENT_BUS_NAME = aws_cloudwatch_event_bus.main.name,
       DB_SECRET_ARN  = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST        = module.rds.db_instance_address
+      DB_NAME        = "studentportal"
+      DB_PORT        = "5432"
     }
   }
 
@@ -50,6 +53,9 @@ resource "aws_lambda_function" "get_student_courses" {
     variables = {
       EVENT_BUS_NAME = aws_cloudwatch_event_bus.main.name,
       DB_SECRET_ARN  = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST        = module.rds.db_instance_address
+      DB_NAME        = "studentportal"
+      DB_PORT        = "5432"
     }
   }
 
@@ -111,6 +117,115 @@ resource "aws_lambda_function" "get_program_details" {
       DB_SECRET_ARN  = aws_secretsmanager_secret.db_secret.arn
       DB_HOST        = module.rds.db_instance_address
       DB_NAME        = "studentportal"
+      DB_PORT        = "5432"
+      EVENT_BUS_NAME = aws_cloudwatch_event_bus.main.name
+    }
+  }
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.private.id]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
+  tags = local.common_tags
+
+  depends_on = [
+    aws_iam_role_policy_attachment.worker_policy_attachment,
+    aws_security_group.lambda_sg,
+    module.rds
+  ]
+}
+
+# Lambda function for getting course details
+resource "aws_lambda_function" "get_course_details" {
+  function_name = "get-course-details"
+  role          = aws_iam_role.worker_lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  timeout       = 30
+  memory_size   = 256
+
+  # This will be updated by the services CI/CD pipeline
+  filename = "${path.module}/dummy_lambda.zip"
+
+  environment {
+    variables = {
+      DB_SECRET_ARN  = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST        = module.rds.db_instance_address
+      DB_NAME        = "studentportal"
+      DB_PORT        = "5432"
+      EVENT_BUS_NAME = aws_cloudwatch_event_bus.main.name
+    }
+  }
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.private.id]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
+  tags = local.common_tags
+
+  depends_on = [
+    aws_iam_role_policy_attachment.worker_policy_attachment,
+    aws_security_group.lambda_sg,
+    module.rds
+  ]
+}
+
+# Lambda function for getting enrollment status
+resource "aws_lambda_function" "get_enrollment_status" {
+  function_name = "get-enrollment-status"
+  role          = aws_iam_role.worker_lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  timeout       = 30
+  memory_size   = 256
+
+  # This will be updated by the services CI/CD pipeline
+  filename = "${path.module}/dummy_lambda.zip"
+
+  environment {
+    variables = {
+      DB_SECRET_ARN  = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST        = module.rds.db_instance_address
+      DB_NAME        = "studentportal"
+      DB_PORT        = "5432"
+      EVENT_BUS_NAME = aws_cloudwatch_event_bus.main.name
+    }
+  }
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.private.id]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
+  tags = local.common_tags
+
+  depends_on = [
+    aws_iam_role_policy_attachment.worker_policy_attachment,
+    aws_security_group.lambda_sg,
+    module.rds
+  ]
+}
+
+# Lambda function for getting usage info
+resource "aws_lambda_function" "get_usage_info" {
+  function_name = "get-usage-info"
+  role          = aws_iam_role.worker_lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+  timeout       = 30
+  memory_size   = 256
+
+  # This will be updated by the services CI/CD pipeline
+  filename = "${path.module}/dummy_lambda.zip"
+
+  environment {
+    variables = {
+      DB_SECRET_ARN  = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST        = module.rds.db_instance_address
+      DB_NAME        = "studentportal"
+      DB_PORT        = "5432"
       EVENT_BUS_NAME = aws_cloudwatch_event_bus.main.name
     }
   }

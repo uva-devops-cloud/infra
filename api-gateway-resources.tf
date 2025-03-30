@@ -20,7 +20,14 @@ resource "aws_api_gateway_deployment" "default" {
     aws_api_gateway_resource.user_profile,
     aws_api_gateway_resource.query_status,
     aws_api_gateway_integration.hello_integration,
-    aws_api_gateway_integration.hello_options_integration
+    aws_api_gateway_integration.hello_options_integration,
+    aws_api_gateway_integration.query_options_integration,
+    aws_api_gateway_integration_response.query_options_integration_response,
+    aws_api_gateway_integration_response.query_post_integration_response,
+    aws_api_gateway_gateway_response.cors_4xx,
+    aws_api_gateway_gateway_response.cors_5xx,
+    aws_api_gateway_gateway_response.unauthorized,
+    aws_api_gateway_gateway_response.access_denied
   ]
 
   triggers = {
@@ -33,7 +40,18 @@ resource "aws_api_gateway_deployment" "default" {
       aws_api_gateway_method.query_status_get.id,
       aws_api_gateway_integration.query_intake_integration.id,
       aws_api_gateway_integration.update_profile_integration.id,
-      aws_api_gateway_integration.query_status_integration.id
+      aws_api_gateway_integration.query_status_integration.id,
+      aws_api_gateway_method.query_options.id,
+      aws_api_gateway_method_response.query_options_200.id,
+      aws_api_gateway_method_response.query_post_200.id,
+      aws_api_gateway_gateway_response.cors_4xx.id,
+      aws_api_gateway_gateway_response.cors_5xx.id,
+      aws_api_gateway_gateway_response.unauthorized.id,
+      aws_api_gateway_gateway_response.access_denied.id,
+      aws_api_gateway_method.query_post.id,
+      aws_api_gateway_method.query_post.authorization,
+      aws_api_gateway_integration.query_intake_integration.id,
+      timestamp()
     ]))
   }
 
@@ -77,12 +95,11 @@ resource "aws_api_gateway_method" "query_post" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.query.id
   http_method   = "POST"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
+  authorization = "NONE" # Temporarily change to NONE for testing
+  # authorizer_id = aws_api_gateway_authorizer.students_authorizer.id  # Commented out during testing
 
   depends_on = [
-    aws_api_gateway_resource.query,
-    aws_api_gateway_authorizer.students_authorizer
+    aws_api_gateway_resource.query
   ]
 }
 
@@ -100,6 +117,89 @@ resource "aws_api_gateway_integration" "query_intake_integration" {
   ]
 }
 
+#==============================================================================
+# QUERY ENDPOINT (OPTIONS) - CORS Support
+#==============================================================================
+
+# OPTIONS method for CORS preflight requests
+resource "aws_api_gateway_method" "query_options" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.query.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+# Mock integration for OPTIONS method
+resource "aws_api_gateway_integration" "query_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query.id
+  http_method = aws_api_gateway_method.query_options.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+# Response for OPTIONS method
+resource "aws_api_gateway_method_response" "query_options_200" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query.id
+  http_method = aws_api_gateway_method.query_options.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+# Integration response for OPTIONS method
+resource "aws_api_gateway_integration_response" "query_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query.id
+  http_method = aws_api_gateway_method.query_options.http_method
+  status_code = aws_api_gateway_method_response.query_options_200.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# Add CORS headers to POST method response
+resource "aws_api_gateway_method_response" "query_post_200" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query.id
+  http_method = aws_api_gateway_method.query_post.http_method
+  status_code = "200"
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+# Configure POST method integration response
+resource "aws_api_gateway_integration_response" "query_post_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query.id
+  http_method = aws_api_gateway_method.query_post.http_method
+  status_code = aws_api_gateway_method_response.query_post_200.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'",
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [
+    aws_api_gateway_integration.query_intake_integration
+  ]
+}
 
 #==============================================================================
 # USER PROFILE ENDPOINT (PUT)
@@ -160,8 +260,8 @@ resource "aws_api_gateway_method" "query_status_get" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.query_status.id
   http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.students_authorizer.id
+  authorization = "NONE"
+
   request_parameters = {
     "method.request.path.correlationId" = true
   }
@@ -186,3 +286,158 @@ resource "aws_api_gateway_integration" "query_status_integration" {
   ]
 }
 
+# OPTIONS method for CORS preflight requests for query status endpoint
+resource "aws_api_gateway_method" "query_status_options" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.query_status.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+
+  depends_on = [aws_api_gateway_resource.query_status]
+}
+
+# Mock integration for OPTIONS method
+resource "aws_api_gateway_integration" "query_status_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_options.http_method
+  type        = "MOCK"
+
+  # Mock request template
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+
+  depends_on = [aws_api_gateway_method.query_status_options]
+}
+
+# Response for OPTIONS preflight request
+resource "aws_api_gateway_method_response" "query_status_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+
+  depends_on = [aws_api_gateway_method.query_status_options]
+}
+
+# Integration response for OPTIONS
+resource "aws_api_gateway_integration_response" "query_status_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_options.http_method
+  status_code = aws_api_gateway_method_response.query_status_options_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'https://d1npgfnzouv53u.cloudfront.net'"
+  }
+
+  depends_on = [
+    aws_api_gateway_method_response.query_status_options_response,
+    aws_api_gateway_integration.query_status_options_integration
+  ]
+}
+
+# Add CORS headers to GET method response
+resource "aws_api_gateway_method_response" "query_status_get_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_get.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+
+  depends_on = [aws_api_gateway_method.query_status_get]
+}
+
+# Add CORS headers to the integration response
+resource "aws_api_gateway_integration_response" "query_status_get_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.query_status.id
+  http_method = aws_api_gateway_method.query_status_get.http_method
+  status_code = aws_api_gateway_method_response.query_status_get_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'https://d1npgfnzouv53u.cloudfront.net'"
+  }
+
+  depends_on = [
+    aws_api_gateway_method_response.query_status_get_response,
+    aws_api_gateway_integration.query_status_integration
+  ]
+}
+
+# CORS headers needed for 401 responses
+resource "aws_api_gateway_gateway_response" "unauthorized_response" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "UNAUTHORIZED"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
+# Add CORS-related Gateway Responses to handle all error types
+resource "aws_api_gateway_gateway_response" "cors_4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "cors_5xx" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "unauthorized" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "UNAUTHORIZED"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "access_denied" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  response_type = "ACCESS_DENIED"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Origin'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'OPTIONS,POST,GET'"
+  }
+}
