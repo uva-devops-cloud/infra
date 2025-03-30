@@ -101,7 +101,25 @@ resource "aws_cognito_user_pool_client" "students_client" {
   allowed_oauth_scopes = [
     "openid",
     "email",
-    "profile"
+    "profile",
+    # The ${...} syntax is called an "interpolation" in Terraform.
+    # It allows you to insert the value of a variable or expression
+    # into a string. In this case, we're inserting the value of the
+    # "identifier" attribute of the "students_api" resource server,
+    # which we created above.
+    #
+    # The value of "identifier" is set to "students-api" in the
+    # "aws_cognito_resource_server" block above.
+    #
+    # So, this line is effectively setting the allowed scope to
+    # "students-api/students.read". This means that the client is
+    # allowed to request an access token with the "students.read"
+    # scope when using the Authorization Code flow.
+    #
+    # The "students.read" scope is based on the "students.read" custom
+    # scope defined in the "aws_cognito_resource_server" block above.
+    "${aws_cognito_resource_server.students_api.identifier}/students.read",
+    "${aws_cognito_resource_server.students_api.identifier}/students.write"
   ]
   supported_identity_providers = [
     "COGNITO", # Default Cognito-based (user/password) login
@@ -123,8 +141,45 @@ resource "aws_cognito_user_pool_client" "students_client" {
   # If you want to enable the OAuth flows in the Hosted UI
   allowed_oauth_flows_user_pool_client = true
   generate_secret                      = false # If front-end only (no server secret needed)
+  
+  # Essential for API access
+  access_token_validity = 1 # Hours
+  id_token_validity     = 1 # Hours
+  
+  token_validity_units {
+    access_token  = "hours"
+    id_token      = "hours"
+    refresh_token = "days"
+  }
 
-  depends_on = [aws_cognito_identity_provider.google]
+  explicit_auth_flows = [
+    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH",
+    "ALLOW_USER_PASSWORD_AUTH"
+  ]
+
+  depends_on = [aws_cognito_identity_provider.google, aws_cognito_resource_server.students_api]
+}
+
+###################################################
+#  COGNITO RESOURCE SERVER FOR API ACCESS         #
+###################################################
+resource "aws_cognito_resource_server" "students_api" {
+  identifier = "students-api"
+  name       = "Students API"
+  
+  user_pool_id = aws_cognito_user_pool.students.id
+  
+  # Define the custom scopes for your API
+  scope {
+    scope_name        = "students.read"
+    scope_description = "Read access to student data API"
+  }
+  
+  scope {
+    scope_name        = "students.write"
+    scope_description = "Write access to student data API"
+  }
 }
 
 ###################################################

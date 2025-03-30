@@ -23,15 +23,22 @@ resource "aws_lambda_function" "query_intake" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 30
+  timeout     = 60
   memory_size = 256
 
   # Remove vpc_config to place outside VPC for direct API Gateway access
 
   environment {
     variables = {
-      LLM_ANALYZER_FUNCTION   = aws_lambda_function.llm_query_analyzer.function_name
-      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
+      LLM_ANALYZER_FUNCTION        = aws_lambda_function.llm_query_analyzer.function_name
+      CONVERSATION_TABLE_NAME      = aws_dynamodb_table.conversation_memory.name
+      USER_DATA_GENERATOR_FUNCTION = aws_lambda_function.user_data_generator.function_name
+      REQUESTS_TABLE_NAME          = aws_dynamodb_table.student_query_requests.name
+      RESPONSES_TABLE_NAME         = aws_dynamodb_table.student_query_responses.name
+      DB_SECRET_ARN                = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST                      = module.rds.db_instance_address
+      DB_NAME                      = "studentportal"
+      DB_PORT                      = "5432"
     }
   }
 
@@ -45,23 +52,23 @@ resource "aws_lambda_function" "query_intake" {
 #==============================================================================
 # LLM QUERY ANALYZER LAMBDA
 #==============================================================================
-# Purpose: Analyzes student queries using LLM to determine required data sources
-# Invoked by: Query Intake Lambda
-# Invokes: Worker Dispatcher Lambda
+# Purpose: Analyzes student queries using LLM to determine intent and required data
+# Source: Query Intake Lambda (synchronous invocation)
+# Target: Worker Dispatcher Lambda (if data retrieval is needed)
+# Used for: Intent recognition and small talk detection
 resource "aws_lambda_function" "llm_query_analyzer" {
   function_name = "student-query-llm-analyzer"
   role          = aws_iam_role.orchestrator_lambda_role.arn
 
   # Use a minimal dummy file - will be replaced by CI/CD
   filename = "${path.module}/dummy_lambda.zip"
-  handler  = "index.handler"
-  runtime  = "nodejs18.x"
+  handler  = "lambda_function.lambda_handler"
+  runtime  = "python3.9"
 
-  timeout     = 60 # Increased for LLM API calls
-  memory_size = 256
+  timeout     = 120
+  memory_size = 512
 
-  # Remove vpc_config to place outside VPC for LLM API access
-
+  # Configure environment variables
   environment {
     variables = {
       WORKER_DISPATCHER_FUNCTION = aws_lambda_function.worker_dispatcher.function_name,
@@ -70,10 +77,6 @@ resource "aws_lambda_function" "llm_query_analyzer" {
       CONVERSATION_TABLE_NAME    = aws_dynamodb_table.conversation_memory.name
     }
   }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment
-  ]
 
   tags = local.common_tags
 }
@@ -93,16 +96,24 @@ resource "aws_lambda_function" "worker_dispatcher" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 30
+  timeout     = 120
   memory_size = 256
 
-  # Remove vpc_config to place outside VPC
+  # Add VPC configuration for database access
+  vpc_config {
+    subnet_ids         = [aws_subnet.private.id]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
 
   environment {
     variables = {
       EVENT_BUS_NAME          = aws_cloudwatch_event_bus.main.name,
       REQUESTS_TABLE_NAME     = aws_dynamodb_table.student_query_requests.name,
-      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
+      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name,
+      DB_SECRET_ARN           = aws_secretsmanager_secret.db_secret.arn,
+      DB_HOST                 = module.rds.db_instance_address,
+      DB_NAME                 = "studentportal",
+      DB_PORT                 = "5432"
     }
   }
 
@@ -128,7 +139,7 @@ resource "aws_lambda_function" "response_aggregator" {
   handler  = "index.handler"
   runtime  = "nodejs18.x"
 
-  timeout     = 30
+  timeout     = 120
   memory_size = 256
 
   # Remove vpc_config to place outside VPC
@@ -151,36 +162,32 @@ resource "aws_lambda_function" "response_aggregator" {
 #==============================================================================
 # ANSWER GENERATOR LAMBDA
 #==============================================================================
-# Purpose: Generates final answers using aggregated data and LLM
-# Invoked by: Response Aggregator Lambda
-# Updates: DynamoDB with final responses
+# Purpose: Generates final answers to student queries using LLM and aggregated data
+# Source: Response Aggregator Lambda (synchronous invocation)
+# Target: DynamoDB (conversation & response storage)
+# Used for: Creating coherent responses from multiple data sources
 resource "aws_lambda_function" "answer_generator" {
   function_name = "student-query-answer-generator"
   role          = aws_iam_role.orchestrator_lambda_role.arn
 
   # Use a minimal dummy file - will be replaced by CI/CD
   filename = "${path.module}/dummy_lambda.zip"
-  handler  = "index.handler"
-  runtime  = "nodejs18.x"
+  handler  = "lambda_function.lambda_handler"
+  runtime  = "python3.9"
 
-  timeout     = 60 # Increased for LLM API calls
-  memory_size = 256
+  timeout     = 120
+  memory_size = 512
 
-  # Remove vpc_config to place outside VPC for LLM API access
-
+  # Configure environment variables
   environment {
     variables = {
-      LLM_ENDPOINT            = var.llm_endpoint,
-      LLM_API_KEY_SECRET_ARN  = aws_secretsmanager_secret.llm_api_key.arn,
+      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name,
       REQUESTS_TABLE_NAME     = aws_dynamodb_table.student_query_requests.name,
       RESPONSES_TABLE_NAME    = aws_dynamodb_table.student_query_responses.name,
-      CONVERSATION_TABLE_NAME = aws_dynamodb_table.conversation_memory.name
+      LLM_ENDPOINT            = var.llm_endpoint,
+      LLM_API_KEY_SECRET_ARN  = aws_secretsmanager_secret.llm_api_key.arn
     }
   }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.orchestrator_policy_attachment
-  ]
 
   tags = local.common_tags
 }
@@ -221,6 +228,46 @@ resource "aws_lambda_function" "query_status" {
 }
 
 #==============================================================================
+# USER DATA GENERATOR LAMBDA
+#==============================================================================
+# Purpose: Generates random student data for newly registered users
+# Invoked by: Query Intake Lambda when a user makes their first query
+# Connects to: PostgreSQL database to create student records
+resource "aws_lambda_function" "user_data_generator" {
+  function_name = "student-query-user-data-generator"
+  role          = aws_iam_role.orchestrator_lambda_role.arn
+
+  # Use a minimal dummy file - will be replaced by CI/CD
+  filename = "${path.module}/dummy_lambda.zip"
+  handler  = "index.handler"
+  runtime  = "nodejs18.x"
+
+  timeout     = 60 # Higher timeout for database operations
+  memory_size = 256
+
+  # Configure VPC access for database connectivity
+  vpc_config {
+    subnet_ids         = [aws_subnet.private.id]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
+  environment {
+    variables = {
+      DB_SECRET_ARN = aws_secretsmanager_secret.db_secret.arn
+      DB_HOST       = module.rds.db_instance_address
+      DB_NAME       = "studentportal"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.orchestrator_policy_attachment,
+    module.rds
+  ]
+
+  tags = local.common_tags
+}
+
+#==============================================================================
 # LAMBDA PERMISSIONS
 #==============================================================================
 # Permission for API Gateway to invoke Query Intake Lambda
@@ -238,7 +285,7 @@ resource "aws_lambda_permission" "api_gateway_query_status" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.query_status.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/GET/query/{correlationId}"
+  source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*/GET/query/*"
 }
 
 # Permission for EventBridge to invoke Response Aggregator Lambda

@@ -44,7 +44,52 @@ variable "environment" {
 variable "ssh_public_key" {
   description = "Public SSH key for EC2 instance access"
   type        = string
-  sensitive   = true  # Mark as sensitive
+  sensitive   = true # Mark as sensitive
+}
+
+variable "llm_endpoint" {
+  type    = string
+  default = "https://api.anthropic.com/v1/messages"
+  description = "Endpoint for the LLM API (Anthropic Claude)"
+}
+
+variable "llm_api_key" {
+  description = "API key for LLM service (e.g., Anthropic)"
+  type        = string
+  sensitive   = true
+  default     = "" # Empty default, will be provided by GitHub Actions
+}
+
+# Database configuration for UserDataGenerator Lambda
+variable "db_host" {
+  description = "Database host for Lambda functions that need database access"
+  type        = string
+  default     = "student-db.cluster-xyz.eu-west-2.rds.amazonaws.com"
+}
+
+variable "db_name" {
+  description = "Database name for student data"
+  type        = string
+  default     = "student_data"
+}
+
+variable "db_port" {
+  description = "Database port"
+  type        = number
+  default     = 5432
+}
+
+# Lambda VPC configuration
+variable "lambda_subnet_ids" {
+  description = "Subnet IDs for Lambda functions that need VPC access"
+  type        = list(string)
+  default     = []
+}
+
+variable "lambda_security_group_ids" {
+  description = "Security group IDs for Lambda functions that need VPC access"
+  type        = list(string)
+  default     = []
 }
 
 variable "llm_endpoint" {
