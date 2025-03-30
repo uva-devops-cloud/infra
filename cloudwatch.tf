@@ -667,3 +667,31 @@ resource "aws_sns_topic_policy" "lambda_alerts_policy" {
     ]
   })
 }
+
+# SNS Topic Subscription - Thomas Penner
+resource "aws_sns_topic_subscription" "thomas_subscription" {
+  topic_arn = aws_sns_topic.lambda_alerts.arn
+  protocol  = "email"
+  endpoint  = "thomas.penner@student.uva.nl"
+}
+
+# SNS Topic Subscription - Jan Vlug
+resource "aws_sns_topic_subscription" "jan_subscription" {
+  topic_arn = aws_sns_topic.lambda_alerts.arn
+  protocol  = "email"
+  endpoint  = "jan.vlug@student.uva.nl"
+}
+
+# SNS Topic Subscription - James Bush
+resource "aws_sns_topic_subscription" "james_subscription" {
+  topic_arn = aws_sns_topic.lambda_alerts.arn
+  protocol  = "email"
+  endpoint  = "james.bush.ii@student.uva.nl"
+}
+
+# SNS Topic Subscription - Merlijn Van Uden
+resource "aws_sns_topic_subscription" "merlijn_subscription" {
+  topic_arn = aws_sns_topic.lambda_alerts.arn
+  protocol  = "email"
+  endpoint  = "merlijn.van.uden@student.uva.nl"
+}
