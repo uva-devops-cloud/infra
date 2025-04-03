@@ -48,8 +48,8 @@ variable "ssh_public_key" {
 }
 
 variable "llm_endpoint" {
-  type    = string
-  default = "https://api.anthropic.com/v1/messages"
+  type        = string
+  default     = "https://api.anthropic.com/v1/messages"
   description = "Endpoint for the LLM API (Anthropic Claude)"
 }
 
@@ -90,9 +90,4 @@ variable "lambda_security_group_ids" {
   description = "Security group IDs for Lambda functions that need VPC access"
   type        = list(string)
   default     = []
-}
-
-variable "llm_endpoint" {
-  type    = string
-  default = "https://api.openai.com/v1/chat/completions"
 }
