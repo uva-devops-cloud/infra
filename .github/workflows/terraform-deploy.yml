@@ -70,3 +70,11 @@ jobs:
         working-directory: .
 
         # terraform destroy
+      - name: Terraform Destroy
+        run: |
+          terraform destroy -auto-approve \
+            -var="google_client_secret=${{ secrets.google_client_secret }}" \
+            -var="environment=${{ inputs.environment }}" \
+            -var="ssh_public_key=${{ secrets.ssh_public_key }}" \
+            -var="llm_api_key=${{ secrets.anthropic_api_key }}"
+        working-directory: .
